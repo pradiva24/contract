@@ -83,3 +83,13 @@ Open **Company Settings → PDF branding** for the selected business to upload:
 Branding assets are stored under the private `storage/company-branding/<company_id>/` directory. Each asset is limited to 5 MB. The logo, stamp and signature can be enabled independently and their positions can be adjusted in canvas pixels. Enabled assets are overlaid on each page of newly generated contract PDFs. The contact footer uses the business address, phone and website.
 
 After changing branding, open Contract Records and click **Generate** for each contract whose PDF should be refreshed. Existing PDFs are not silently overwritten by a settings change. Company-specific branding and settings are isolated by company ID.
+
+
+### Import templates into Contract Studio
+
+Contract Studio supports importing Word `.docx` files and Google Docs links:
+- **Import DOCX** reads a local Word file in the browser using Mammoth.js and converts paragraphs, headings, tables, and embedded images into editable canvas objects.
+- **Import Google Docs** exports a Google document as DOCX on the server, then uses the same editable import pipeline. The document must be shared as **Anyone with the link → Viewer**. Private documents requiring Google sign-in are not supported by this link-based import.
+- Import creates a new unsaved template and does not overwrite the template currently open. Review the imported pages and click **Save template** to create the new template.
+
+DOCX import is a best-effort layout conversion. Complex page layouts, columns, headers/footers, text wrapping, advanced typography, and precise image positioning may need manual adjustment in Contract Studio. The importer is limited to 8 MB source DOCX files. Google Docs link import requires PHP cURL enabled on the hosting server. Mammoth.js is loaded from jsDelivr, so the editor browser needs internet access.
