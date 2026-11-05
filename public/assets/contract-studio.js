@@ -19,9 +19,11 @@ function createStage(){
  stage=new Konva.Stage({container:'canvasMount',width:d.width*scale,height:d.height*scale});
  layer=new Konva.Layer();layer.scale({x:scale,y:scale});stage.add(layer);
  const bg=new Konva.Rect({x:0,y:0,width:d.width,height:d.height,fill:page().background||'#fff',listening:false});layer.add(bg);bg.moveToBottom();
+ if(page().backgroundImage){const bgImg=new Image();bgImg.onload=()=>{const kimg=new Konva.Image({x:0,y:0,width:d.width,height:d.height,image:bgImg,listening:false});layer.add(kimg);kimg.setZIndex(1);layer.draw();};bgImg.src=page().backgroundImage;}
  transformer=new Konva.Transformer({rotateEnabled:true,keepRatio:false,anchorSize:8,borderStroke:'#2563eb',anchorStroke:'#2563eb',anchorFill:'#fff'});layer.add(transformer);
  (page().objects||[]).forEach(addNodeFromData);transformer.moveToTop();
  stage.on('click tap',e=>{if(e.target===stage||e.target===bg){setSelected(null);return;}let n=e.target;while(n&&n.getParent()!==layer)n=n.getParent();setSelected(n&&n!==transformer?n:null);});
+ stage.on('dragstart',e=>{let n=e.target;while(n&&n.getParent()!==layer)n=n.getParent();if(n&&n!==bg)setSelected(n);});
  stage.on('dragend transformend',()=>{syncSelected();snapshot();});
  layer.draw();updateDimensions();renderPageList();renderLayers();
 }
@@ -29,9 +31,9 @@ function addNodeFromData(o,onAdded){
  let n;
  if(o.type==='text'){n=new Konva.Text({x:o.x||60,y:o.y||60,width:o.width||500,text:o.text||'Text',fontSize:o.fontSize||32,fontFamily:o.fontFamily||'Arial',fontStyle:o.fontStyle||'normal',fill:o.fill||'#111111',align:o.align||'left',draggable:!o.locked});}
  else if(o.type==='rect'){n=new Konva.Rect({x:o.x||60,y:o.y||60,width:o.width||260,height:o.height||120,fill:o.fill||'#286900',cornerRadius:o.cornerRadius||0,draggable:!o.locked});}
- else if(o.type==='image'&&o.src){const img=new Image();img.onload=()=>{const imageNode=new Konva.Image({x:o.x||60,y:o.y||60,width:o.width||240,height:o.height||160,image:img,draggable:!o.locked});imageNode.setAttr('studioData',o);layer.add(imageNode);layer.draw();if(onAdded)onAdded(imageNode);};img.src=o.src;return;}
+ else if(o.type==='image'&&o.src){const img=new Image();img.onload=()=>{const imageNode=new Konva.Image({x:o.x||60,y:o.y||60,width:o.width||240,height:o.height||160,image:img,draggable:!o.locked});imageNode.setAttr('studioData',o);imageNode.draggable(!o.locked);imageNode.on('dragstart',()=>setSelected(imageNode));layer.add(imageNode);layer.draw();if(onAdded)onAdded(imageNode);};img.src=o.src;return;}
  else return;
- n.setAttr('studioData',o);layer.add(n);if(onAdded)onAdded(n);
+ n.setAttr('studioData',o);n.draggable(!o.locked);n.on('dragstart',()=>setSelected(n));layer.add(n);if(onAdded)onAdded(n);
 }
 function addObject(o){page().objects.push(o);addNodeFromData(o,n=>{layer.draw();setSelected(n);});layer.draw();snapshot();}
 function addText(text='Double-click to edit text',size=34){addObject({id:'obj-'+Date.now(),type:'text',name:'Text',text,x:80,y:100,width:540,fontSize:size,fill:'#111111'});}
@@ -54,9 +56,11 @@ function renderLayers(){const el=$('layerList');if(!el)return;el.innerHTML='';[.
 function renderPageList(){const el=$('pageList');el.innerHTML='';doc.pages.forEach((p,i)=>{const b=document.createElement('button');b.className='page-entry'+(i===pageIndex?' active':'');b.type='button';b.textContent='Page '+(i+1);b.onclick=()=>{pageIndex=i;setSelected(null);createStage();};el.appendChild(b);});}
 function updateDimensions(){const d=dims();$('pageDimensions').textContent='A4 · '+d.label;$('orientation').value=doc.orientation||'portrait';}
 function setScale(v){scale=Math.max(.25,Math.min(1.5,v));createStage();$('zoomValue').textContent=Math.round(scale*100)+'%';}
+function uploadBackground(file){if(!file)return;if(file.size>3*1024*1024){alert('Background image limit is 3 MB.');return;}const reader=new FileReader();reader.onload=()=>{page().backgroundImage=reader.result;snapshot();createStage();};reader.readAsDataURL(file);}
 function uploadImage(file){if(!file)return;if(file.size>3*1024*1024){alert('Image limit is 3 MB.');return;}const reader=new FileReader();reader.onload=()=>{const src=reader.result;const img=new Image();img.onload=()=>{const max=420,ratio=Math.min(max/img.width,max/img.height,1);addObject({id:'obj-'+Date.now(),type:'image',name:file.name,x:80,y:100,width:img.width*ratio,height:img.height*ratio,src});};img.src=src;};reader.readAsDataURL(file);}
 $('addText').onclick=()=>addText();$('sideText').onclick=()=>addText();$('addHeading').onclick=()=>addText('OFFICIAL CONTRACT RATE 2026',42);$('addCompanyVariable').onclick=()=>{addObject({id:'obj-'+Date.now(),type:'text',name:'Company Name',text:'{{company_name}}',x:80,y:100,width:540,fontSize:32,fill:'#111111'});};
-$('addRect').onclick=addRect;$('sideShape').onclick=addRect;$('addImage').onclick=()=>$('imageInput').click();$('sideImage').onclick=()=>$('imageInput').click();$('imageInput').onchange=e=>uploadImage(e.target.files[0]);
+$('addRect').onclick=addRect;$('sideShape').onclick=addRect;$('addImage').onclick=()=>$('imageInput').click();$('sideImage').onclick=()=>$('imageInput').click();$('imageInput').onchange=e=>{uploadImage(e.target.files[0]);e.target.value='';};
+$('addBackground').onclick=()=>$('backgroundInput').click();$('sideBackground').onclick=()=>$('backgroundInput').click();$('backgroundInput').onchange=e=>{uploadBackground(e.target.files[0]);e.target.value='';};
 $('addProductTable').onclick=()=>addText('SERVICE / PRODUCT                 DESCRIPTION                 CONTRACT RATE\n[Service name]                    [Description]               [Fixed rate]\n[Service name]                    [Description]               [Fixed rate]',18);
 $('addTerms').onclick=()=>addText('TERMS & CONDITIONS\nCancellation policy: ...',20);$('addFooter').onclick=()=>addText('Marketing · Reservation · WhatsApp · Email',16);
 $('deleteObject').onclick=()=>{if(!selected)return;const id=objectData(selected).id;page().objects=page().objects.filter(o=>o.id!==id);selected.destroy();setSelected(null);layer.draw();snapshot();};
