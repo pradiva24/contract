@@ -48,7 +48,8 @@ function company_setting(int $companyId, string $key, string $default = ''): str
     $st->execute([$companyId, $key]);
     $value = $st->fetchColumn();
     if ($value !== false && $value !== null && $value !== '') return (string)$value;
-    return setting($key, $default);
+    // Never fall back to another tenant's global business settings.
+    return $default;
 }
 
 function audit_company(int $companyId, string $action, ?string $type = null, ?int $id = null, string $description = ''): void {
