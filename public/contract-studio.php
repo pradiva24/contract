@@ -103,8 +103,10 @@ $csrf = csrf_token();
   <button class="tool-btn active" data-tool="select" type="button">↖ Select</button>
   <button class="tool-btn" id="addText" type="button">T Text</button>
   <button class="tool-btn" id="addRect" type="button">▭ Shape</button>
-  <button class="tool-btn" id="addImage" type="button">▧ Image</button>
+  <button class="tool-btn" id="addImage" type="button">▧ Add image</button>
+  <button class="tool-btn" id="addBackground" type="button">▧ Upload background</button>
   <input id="imageInput" type="file" accept="image/png,image/jpeg,image/webp" hidden>
+  <input id="backgroundInput" type="file" accept="image/png,image/jpeg,image/webp" hidden>
   <span class="toolbar-separator"></span>
   <label class="page-control">Page <select id="orientation"><option value="portrait">A4 Portrait</option><option value="landscape">A4 Landscape</option></select></label>
   <button class="tool-btn" id="addPage" type="button">+ Page</button>
@@ -117,6 +119,7 @@ $csrf = csrf_token();
     <button class="side-item" id="sideText" type="button"><b>T</b><span>Text</span></button>
     <button class="side-item" id="sideShape" type="button"><b>▭</b><span>Shapes</span></button>
     <button class="side-item" id="sideImage" type="button"><b>▧</b><span>Upload image</span></button>
+    <button class="side-item" id="sideBackground" type="button"><b>▧</b><span>Upload background</span></button>
     <div class="side-heading">CONTRACT BLOCKS</div>
     <button class="side-item" id="addHeading" type="button"><b>H</b><span>Contract heading</span></button>
     <button class="side-item" id="addCompanyVariable" type="button"><b>{ }</b><span>Company name variable</span></button>
