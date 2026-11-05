@@ -119,7 +119,7 @@ function generate_contract_pdf(int $id, int $companyId): string {
                 $fontStyle = strtolower(trim((string)($object['fontStyle'] ?? 'normal')));
                 $fontWeight = in_array($fontStyle, ['bold','bold italic'], true) ? '700' : '400';
                 $fontItalic = in_array($fontStyle, ['italic','bold italic'], true) ? 'italic' : 'normal';
-                $style .= 'font-family:'.htmlspecialchars($font, ENT_QUOTES, 'UTF-8').',DejaVu Sans,sans-serif;font-size:'.$fontSize.'px;color:'.$color.';text-align:'.$align.';font-weight:'.$fontWeight.';font-style:'.$fontItalic.';line-height:1;white-space:pre-wrap;overflow-wrap:break-word;word-wrap:break-word;';
+                $style .= 'font-family:'.htmlspecialchars($font, ENT_QUOTES, 'UTF-8').',Helvetica,Arial,sans-serif;font-size:'.$fontSize.'px;color:'.$color.';text-align:'.$align.';font-weight:'.$fontWeight.';font-style:'.$fontItalic.';line-height:1;white-space:pre-wrap;overflow-wrap:break-word;word-wrap:break-word;';
                 $elements .= '<div class="element text" style="'.$style.'">'.$text.'</div>';
             } elseif ($type === 'rect') {
                 $fill = preg_match('/^#[0-9a-fA-F]{6}$/', (string)($object['fill'] ?? '')) ? $object['fill'] : '#286900';
@@ -140,7 +140,7 @@ function generate_contract_pdf(int $id, int $companyId): string {
                         if (!in_array($cellVAlign,['top','middle','bottom'],true)) $cellVAlign='middle';
                         if (!preg_match('/^#[0-9a-fA-F]{6}$/',$cellBg)) $cellBg='#ffffff';
                         if (!preg_match('/^#[0-9a-fA-F]{6}$/',$fontColor)) $fontColor='#20242b';
-                        $tableHtml .= '<td style="width:'.$cellWidth.'%;height:'.$thisRowHeight.'px;max-height:'.$thisRowHeight.'px;border:'.$borderWidth.'px solid '.$borderColor.';padding:5px 7px;overflow:hidden;background:'.$cellBg.';color:'.$fontColor.';font-family:'.htmlspecialchars($fontFamily,ENT_QUOTES,'UTF-8').',DejaVu Sans,sans-serif;font-size:'.$fontSize.'px;line-height:1;font-weight:'.(in_array($cellStyle,['bold','bold italic'],true)?'700':'400').';font-style:'.(in_array($cellStyle,['italic','bold italic'],true)?'italic':'normal').';text-align:'.$cellAlign.';vertical-align:'.$cellVAlign.';overflow-wrap:break-word;word-wrap:break-word">'.htmlspecialchars((string)$cell, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8').'</td>';
+                        $tableHtml .= '<td style="width:'.$cellWidth.'%;height:'.$thisRowHeight.'px;max-height:'.$thisRowHeight.'px;border:'.$borderWidth.'px solid '.$borderColor.';padding:5px 7px;overflow:hidden;background:'.$cellBg.';color:'.$fontColor.';font-family:'.htmlspecialchars($fontFamily,ENT_QUOTES,'UTF-8').',Helvetica,Arial,sans-serif;font-size:'.$fontSize.'px;line-height:1;font-weight:'.(in_array($cellStyle,['bold','bold italic'],true)?'700':'400').';font-style:'.(in_array($cellStyle,['italic','bold italic'],true)?'italic':'normal').';text-align:'.$cellAlign.';vertical-align:'.$cellVAlign.';overflow-wrap:break-word;word-wrap:break-word">'.htmlspecialchars((string)$cell, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8').'</td>';
                     }
                     $tableHtml .= '</tr>';
                 }
@@ -161,7 +161,7 @@ function generate_contract_pdf(int $id, int $companyId): string {
     }
     $html = '<!doctype html><html><head><meta charset="utf-8"><style>
       @page{size:A4 '.$orientation.';margin:0}
-      html,body{margin:0;padding:0;font-family:DejaVu Sans,sans-serif}
+      html,body{margin:0;padding:0;font-family:Helvetica,Arial,sans-serif}
       *{box-sizing:border-box}
       .sheet{position:relative;display:block;overflow:hidden;page-break-after:always;margin:0;padding:0}
       .sheet:last-child{page-break-after:auto}
@@ -172,7 +172,7 @@ function generate_contract_pdf(int $id, int $companyId): string {
     $options = new \Dompdf\Options();
     $options->set('isRemoteEnabled', false);
     $options->set('isHtml5ParserEnabled', true);
-    $options->set('defaultFont', 'DejaVu Sans');
+    $options->set('defaultFont', 'Helvetica');
     // Contract Studio coordinates are CSS pixels at 96 DPI; keep Dompdf on the same scale.
     $options->set('dpi', 96);
     $pdf = new \Dompdf\Dompdf($options);
