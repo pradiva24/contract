@@ -88,7 +88,7 @@ $csrf = csrf_token();
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Contract Studio · <?=e($title)?></title>
 <link rel="stylesheet" href="<?=e(url('assets/app.css'))?>">
-<link rel="stylesheet" href="<?=e(url('assets/contract-studio.css?v=20261105g'))?>">
+<link rel="stylesheet" href="<?=e(url('assets/contract-studio.css?v=20261105h'))?>">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">\n<script src="https://cdn.jsdelivr.net/npm/konva@9.3.18/konva.min.js"></script>
 </head>
 <body class="studio-body">
@@ -163,6 +163,7 @@ $csrf = csrf_token();
       <div id="tableProperties" hidden>
         <div class="side-heading">TABLE DESIGN</div>
         <div class="prop-grid">
+          <label>Row to resize<select id="tableRowTarget"><option value="all">All rows</option></select></label>
           <label>Row height (px)<input id="tableRowHeight" type="number" min="20" max="240"></label>
           <label>Border width<input id="tableBorderWidth" type="number" min="0" max="8" step="0.5"></label>
           <label>Header background<input id="tableHeaderFill" type="color"></label>
@@ -173,6 +174,8 @@ $csrf = csrf_token();
           <label>Font family<select id="tableFontFamily"><option>Arial</option><option>Inter</option><option>Roboto</option><option>Georgia</option><option>Times New Roman</option><option>Verdana</option><option>Tahoma</option><option>Courier New</option></select></label>
           <label>Header font size<input id="tableHeaderFontSize" type="number" min="6" max="48"></label>
           <label>Body font size<input id="tableBodyFontSize" type="number" min="6" max="48"></label>
+          <label>Header font style<select id="tableHeaderFontStyle"><option value="normal">Regular</option><option value="bold">Bold</option><option value="italic">Italic</option><option value="bold italic">Bold Italic</option></select></label>
+          <label>Body font style<select id="tableBodyFontStyle"><option value="normal">Regular</option><option value="bold">Bold</option><option value="italic">Italic</option><option value="bold italic">Bold Italic</option></select></label>
         </div>
         <div class="prop-actions table-dim-actions"><button id="addTableRow" type="button">+ Add row</button><button id="removeTableRow" type="button">− Remove row</button></div>
         <div class="prop-actions table-dim-actions"><button id="addTableColumn" type="button">+ Add column</button><button id="removeTableColumn" type="button">− Remove column</button></div>
@@ -193,5 +196,5 @@ window.CONTRACT_STUDIO_CONFIG = {
   initialDocument: <?=json_encode($initial, JSON_UNESCAPED_SLASHES|JSON_UNESCAPED_UNICODE|JSON_HEX_TAG|JSON_HEX_APOS|JSON_HEX_AMP|JSON_HEX_QUOT)?>
 };
 </script>
-<script src="<?=e(url('assets/contract-studio.js?v=20261105g'))?>"></script>
+<script src="<?=e(url('assets/contract-studio.js?v=20261105h'))?>"></script>
 </body></html>
