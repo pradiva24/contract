@@ -21,7 +21,7 @@ function createStage(){
  stage.container().style.touchAction='none';
  layer=new Konva.Layer();layer.scale({x:scale,y:scale});stage.add(layer);
  const bg=new Konva.Rect({x:0,y:0,width:d.width,height:d.height,fill:page().background||'#fff',listening:false});layer.add(bg);bg.moveToBottom();
- if(page().backgroundImage){const bgImg=new Image();bgImg.onload=()=>{const kimg=new Konva.Image({x:0,y:0,width:d.width,height:d.height,image:bgImg,listening:false});layer.add(kimg);kimg.setZIndex(1);layer.draw();};bgImg.src=page().backgroundImage;}
+ if(page().backgroundImage){const bgImg=new Image();bgImg.onload=()=>{const kimg=new Konva.Image({x:0,y:0,width:d.width,height:d.height,image:bgImg,listening:false,name:'page-background'});layer.add(kimg);kimg.setZIndex(1);layer.draw();};bgImg.onerror=()=>alert('Background could not be displayed. Please upload another image.');bgImg.src=page().backgroundImage;}
  transformer=new Konva.Transformer({rotateEnabled:true,keepRatio:false,anchorSize:8,borderStroke:'#2563eb',anchorStroke:'#2563eb',anchorFill:'#fff'});layer.add(transformer);
  (page().objects||[]).forEach(addNodeFromData);transformer.moveToTop();
  stage.on('click tap',e=>{if(e.target===stage||e.target===bg){setSelected(null);return;}let n=e.target;while(n&&n.getParent()!==layer)n=n.getParent();setSelected(n&&n!==transformer?n:null);});
@@ -58,7 +58,26 @@ function renderLayers(){const el=$('layerList');if(!el)return;el.innerHTML='';[.
 function renderPageList(){const el=$('pageList');el.innerHTML='';doc.pages.forEach((p,i)=>{const b=document.createElement('button');b.className='page-entry'+(i===pageIndex?' active':'');b.type='button';b.textContent='Page '+(i+1);b.onclick=()=>{pageIndex=i;setSelected(null);createStage();};el.appendChild(b);});}
 function updateDimensions(){const d=dims();$('pageDimensions').textContent='A4 · '+d.label;$('orientation').value=doc.orientation||'portrait';}
 function setScale(v){scale=Math.max(.25,Math.min(1.5,v));createStage();$('zoomValue').textContent=Math.round(scale*100)+'%';}
-function uploadBackground(file){if(!file)return;if(file.size>3*1024*1024){alert('Background image limit is 3 MB.');return;}const reader=new FileReader();reader.onload=()=>{page().backgroundImage=reader.result;snapshot();createStage();};reader.readAsDataURL(file);}
+function uploadBackground(file){
+ if(!file)return;
+ if(!/^image\\/(png|jpeg|webp)$/.test(file.type)){alert('Choose a PNG, JPG or WebP image.');return;}
+ const reader=new FileReader();
+ reader.onerror=()=>alert('The selected background could not be read.');
+ reader.onload=()=>{
+  const img=new Image();
+  img.onerror=()=>alert('The selected image is invalid or unsupported.');
+  img.onload=()=>{
+   const maxW=1600,maxH=2200,ratio=Math.min(maxW/img.width,maxH/img.height,1);
+   const canvas=document.createElement('canvas');canvas.width=Math.max(1,Math.round(img.width*ratio));canvas.height=Math.max(1,Math.round(img.height*ratio));
+   const ctx=canvas.getContext('2d');ctx.fillStyle='#ffffff';ctx.fillRect(0,0,canvas.width,canvas.height);ctx.drawImage(img,0,0,canvas.width,canvas.height);
+   const data=canvas.toDataURL('image/jpeg',0.78);
+   if(data.length>1800000){alert('Background is still too large. Please choose a smaller image.');return;}
+   page().backgroundImage=data;snapshot();createStage();$('saveState').textContent='Background added · Save template to keep it';
+  };
+  img.src=reader.result;
+ };
+ reader.readAsDataURL(file);
+}
 function uploadImage(file){if(!file)return;if(file.size>3*1024*1024){alert('Image limit is 3 MB.');return;}const reader=new FileReader();reader.onload=()=>{const src=reader.result;const img=new Image();img.onload=()=>{const max=420,ratio=Math.min(max/img.width,max/img.height,1);addObject({id:'obj-'+Date.now(),type:'image',name:file.name,x:80,y:100,width:img.width*ratio,height:img.height*ratio,src});};img.src=src;};reader.readAsDataURL(file);}
 $('addText').onclick=()=>addText();$('sideText').onclick=()=>addText();$('addHeading').onclick=()=>addText('OFFICIAL CONTRACT RATE 2026',42);$('addCompanyVariable').onclick=()=>{addObject({id:'obj-'+Date.now(),type:'text',name:'Company Name',text:'{{company_name}}',x:80,y:100,width:540,fontSize:32,fill:'#111111'});};
 $('addRect').onclick=addRect;$('sideShape').onclick=addRect;$('addImage').onclick=()=>$('imageInput').click();$('sideImage').onclick=()=>$('imageInput').click();$('imageInput').onchange=e=>{uploadImage(e.target.files[0]);e.target.value='';};
