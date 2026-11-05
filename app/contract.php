@@ -199,13 +199,10 @@ function generate_contract_pdf(int $id, int $companyId): string {
 }
 
 function contract_pdf_path(int $id, int $companyId): string {
-    $contract = contract_get_for_company($id, $companyId);
-    $relative = (string)($contract['pdf_path'] ?? '');
-    if ($relative === '' || !str_starts_with($relative, 'contracts/')) return generate_contract_pdf($id, $companyId);
-    $root = realpath(BASE_PATH . '/storage');
-    $path = realpath(BASE_PATH . '/storage/' . $relative);
-    if (!$root || !$path || !str_starts_with($path, $root . DIRECTORY_SEPARATOR) || !is_file($path)) return generate_contract_pdf($id, $companyId);
-    return $path;
+    // Always render from the immutable contract snapshot with the current PDF renderer.
+    // This prevents Preview, Download, and Email from serving a stale PDF after renderer fixes.
+    contract_get_for_company($id, $companyId);
+    return generate_contract_pdf($id, $companyId);
 }
 
 function send_contract_email(int $id, int $companyId): void {
