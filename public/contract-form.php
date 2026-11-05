@@ -52,7 +52,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         db()->prepare('INSERT INTO contract_history(company_id,contract_id,admin_id,action,description) VALUES(?,?,?,?,?)')
             ->execute([$companyId,$id,$adminId,'created','Created from template '.$template['name']]);
         audit_company($companyId, 'contract_created', 'contract', $id, 'Created '.$number);
-        flash('success', 'Data kontrak tersimpan. PDF dan email akan tersedia setelah tahap renderer dan pengiriman diaktifkan.');
+        flash('success', 'Kontrak berhasil dibuat. Anda sekarang dapat melihat pratinjau, mengunduh PDF, atau mengirimkannya melalui email dari Contract Records.');
         redirect('contracts.php');
     } catch (Throwable $e) {
         error_log('Contract create failed: '.$e->getMessage());
