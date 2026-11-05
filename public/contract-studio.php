@@ -89,7 +89,8 @@ $csrf = csrf_token();
 <title>Contract Studio · <?=e($title)?></title>
 <link rel="stylesheet" href="<?=e(url('assets/app.css'))?>">
 <link rel="stylesheet" href="<?=e(url('assets/contract-studio.css?v=20261105i'))?>">
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">\n<script src="https://cdn.jsdelivr.net/npm/konva@9.3.18/konva.min.js"></script>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
+<script src="https://cdn.jsdelivr.net/npm/konva@9.3.18/konva.min.js"></script>
 </head>
 <body class="studio-body">
 <header class="studio-topbar">
