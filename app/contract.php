@@ -33,6 +33,19 @@ function contract_snapshot_document(array $contract): array {
     return $document;
 }
 
+function contract_local_image_src(int $companyId, string $settingKey): string {
+    $relative = company_setting($companyId, $settingKey, '');
+    if ($relative === '' || !str_starts_with($relative, 'company-branding/'.$companyId.'/')) return '';
+    $root = realpath(BASE_PATH . '/storage');
+    $path = realpath(BASE_PATH . '/storage/' . $relative);
+    if (!$root || !$path || !str_starts_with($path, $root . DIRECTORY_SEPARATOR) || !is_file($path)) return '';
+    $mime = function_exists('mime_content_type') ? mime_content_type($path) : '';
+    if (!in_array($mime, ['image/png','image/jpeg'], true)) return '';
+    $bytes = file_get_contents($path);
+    if ($bytes === false || strlen($bytes) > 5 * 1024 * 1024) return '';
+    return 'data:'.$mime.';base64,'.base64_encode($bytes);
+}
+
 function contract_pdf_image_src(string $src): string {
     if (!preg_match('~^data:image/(png|jpeg|jpg|webp);base64,([A-Za-z0-9+/=]+)$~', $src, $m)) return '';
     $bytes = base64_decode($m[2], true);
@@ -58,10 +71,35 @@ function generate_contract_pdf(int $id, int $companyId): string {
     $pageWidth = $orientation === 'landscape' ? '297mm' : '210mm';
     $pageHeight = $orientation === 'landscape' ? '210mm' : '297mm';
     $pagesHtml = '';
+    $brandLogo = contract_local_image_src($companyId, 'brand_logo_path');
+    $brandStamp = contract_local_image_src($companyId, 'brand_stamp_path');
+    $brandSignature = contract_local_image_src($companyId, 'brand_signature_path');
+    $logoX = max(0, min(10000, (float)company_setting($companyId,'brand_logo_x','24')));
+    $logoY = max(0, min(10000, (float)company_setting($companyId,'brand_logo_y','24')));
+    $logoW = max(10, min(1000, (float)company_setting($companyId,'brand_logo_width','120')));
+    $logoH = max(10, min(1000, (float)company_setting($companyId,'brand_logo_height','60')));
+    $stampX = max(0, min(10000, (float)company_setting($companyId,'brand_stamp_x','680')));
+    $stampY = max(0, min(10000, (float)company_setting($companyId,'brand_stamp_y','900')));
+    $signatureX = max(0, min(10000, (float)company_setting($companyId,'brand_signature_x','500')));
+    $signatureY = max(0, min(10000, (float)company_setting($companyId,'brand_signature_y','900')));
+    $brandFooter = trim(implode(' · ', array_filter([
+        company_setting($companyId,'business_address',''),
+        company_setting($companyId,'business_phone',''),
+        company_setting($companyId,'business_website','')
+    ])));
     foreach ($document['pages'] as $page) {
         $background = (string)($page['background'] ?? '#ffffff');
         if (!preg_match('/^#[0-9a-fA-F]{6}$/', $background)) $background = '#ffffff';
         $elements = '';
+        if ($brandLogo !== '' && company_setting($companyId,'brand_logo_enabled','1') === '1') {
+            $elements .= '<img src="'.$brandLogo.'" style="position:absolute;left:'.$logoX.'px;top:'.$logoY.'px;width:'.$logoW.'px;height:'.$logoH.'px;object-fit:contain" alt="">';
+        }
+        if ($brandStamp !== '' && company_setting($companyId,'brand_stamp_enabled','0') === '1') {
+            $elements .= '<img src="'.$brandStamp.'" style="position:absolute;left:'.$stampX.'px;top:'.$stampY.'px;width:100px;height:100px;object-fit:contain" alt="">';
+        }
+        if ($brandSignature !== '' && company_setting($companyId,'brand_signature_enabled','0') === '1') {
+            $elements .= '<img src="'.$brandSignature.'" style="position:absolute;left:'.$signatureX.'px;top:'.$signatureY.'px;width:160px;height:70px;object-fit:contain" alt="">';
+        }
         $backgroundImage = contract_pdf_image_src((string)($page['backgroundImage'] ?? ''));
         if ($backgroundImage !== '') $elements .= '<img src="'.$backgroundImage.'" style="position:absolute;left:0;top:0;width:100%;height:100%;object-fit:cover" alt="">';
         foreach (($page['objects'] ?? []) as $object) {
@@ -104,6 +142,10 @@ function generate_contract_pdf(int $id, int $companyId): string {
                 $src = contract_pdf_image_src((string)($object['src'] ?? ''));
                 if ($src !== '') $elements .= '<img class="element image" src="'.$src.'" style="'.$style.'object-fit:contain" alt="">';
             }
+        }
+        if ($brandFooter !== '' && company_setting($companyId,'brand_footer_enabled','0') === '1') {
+            $footerText = htmlspecialchars($brandFooter, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8');
+            $elements .= '<div style="position:absolute;left:24px;right:24px;bottom:12px;border-top:1px solid #d0d5dd;padding-top:5px;text-align:center;font-size:9px;color:#667085">'.$footerText.'</div>';
         }
         $pagesHtml .= '<div class="sheet" style="width:'.$pageWidth.';height:'.$pageHeight.';background:'.$background.'">'.$elements.'</div>';
     }
