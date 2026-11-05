@@ -39,7 +39,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'impor
         studio_json_response(['ok'=>false, 'message'=>'Security token expired. Refresh the page.'], 419);
     }
     $googleUrl = trim((string)($_POST['google_url'] ?? ''));
-    if (!preg_match('~^https://docs\\.google\\.com/document/d/([a-zA-Z0-9_-]{10,})~', $googleUrl, $match)) {
+    if (!preg_match('~^https://docs\.google\.com/document/d/([a-zA-Z0-9_-]{10,})~', $googleUrl, $match)) {
         studio_json_response(['ok'=>false, 'message'=>'Link Google Docs tidak valid. Gunakan URL dokumen Google Docs.'], 422);
     }
     if (!function_exists('curl_init')) {
