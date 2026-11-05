@@ -67,7 +67,7 @@ page_header('Contract Studio Templates');
  <div class="actions" style="justify-content:space-between;align-items:center;flex-wrap:wrap">
   <div><h2 style="margin:0"><?= $isSuper ? 'All company templates' : 'Your contract templates' ?></h2><p class="muted"><?= $isSuper ? 'Super Admin can edit templates across every business without switching company context.' : 'Design reusable contract layouts for this company.' ?></p></div>
   <?php if ($isSuper): ?>
-   <form method="get" class="actions"><label for="createCompany">Create template for</label><select id="createCompany" name="company_id" required><option value="">Select business</option><?php foreach($companies as $c):?><option value="<?=(int)$c['id']?>" <?=$createCompanyId===(int)$c['id']?'selected':''?>><?=e($c['name'])?></option><?php endforeach;?></select><button class="btn" type="submit">+ Create template</button></form>
+   <form method="get" action="<?=e(url('contract-studio.php'))?>" class="actions"><label for="createCompany">Create template for</label><select id="createCompany" name="company_id" required><option value="">Select business</option><?php foreach($companies as $c):?><option value="<?=(int)$c['id']?>"><?=e($c['name'])?></option><?php endforeach;?></select><button class="btn" type="submit">+ Create template</button></form>
   <?php else: ?><a class="btn" href="<?=e(url('contract-studio.php'))?>">+ Create template</a><?php endif;?>
  </div>
 </div>
