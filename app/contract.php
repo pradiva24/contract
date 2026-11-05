@@ -98,7 +98,9 @@ function generate_contract_pdf(int $id, int $companyId): string {
                 }
                 $tableHtml .= '</table>';
                 $elements .= '<div class="element" style="'.$style.'">'.$tableHtml.'</div>';
-            } elseif ($type === 'icon') {\n                $glyph = htmlspecialchars((string)($object['glyph'] ?? ''), ENT_QUOTES, 'UTF-8'); $color = preg_match('/^#[0-9a-fA-F]{6}$/', (string)($object['fill'] ?? '')) ? $object['fill'] : '#20242b'; $fontSize = max(8, min(160, (float)($object['fontSize'] ?? 48))); $elements .= '<div class="element" style="'.$style.'font-family:DejaVu Sans,sans-serif;font-size:'.$fontSize.'px;color:'.$color.'">'.$glyph.'</div>';\n            } elseif ($type === 'image') {
+            } elseif ($type === 'icon') {
+                $glyph = htmlspecialchars((string)($object['glyph'] ?? ''), ENT_QUOTES, 'UTF-8'); $color = preg_match('/^#[0-9a-fA-F]{6}$/', (string)($object['fill'] ?? '')) ? $object['fill'] : '#20242b'; $fontSize = max(8, min(160, (float)($object['fontSize'] ?? 48))); $elements .= '<div class="element" style="'.$style.'font-family:DejaVu Sans,sans-serif;font-size:'.$fontSize.'px;color:'.$color.'">'.$glyph.'</div>';
+            } elseif ($type === 'image') {
                 $src = contract_pdf_image_src((string)($object['src'] ?? ''));
                 if ($src !== '') $elements .= '<img class="element image" src="'.$src.'" style="'.$style.'object-fit:contain" alt="">';
             }
