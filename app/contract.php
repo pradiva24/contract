@@ -21,8 +21,9 @@ function contract_snapshot_document(array $contract): array {
     $document = $snapshot['document'];
     $companyName = (string)($snapshot['variables']['company_name'] ?? $contract['company_name']);
     foreach ($document['pages'] as &$page) {
-        foreach (($page['objects'] ?? []) as &$object) {
-            if (($object['type'] ?? '') === 'text' && isset($object['text'])) {
+        if (!isset($page['objects']) || !is_array($page['objects'])) continue;
+        foreach ($page['objects'] as &$object) {
+            if (is_array($object) && ($object['type'] ?? '') === 'text' && isset($object['text'])) {
                 $object['text'] = str_replace(['{{company_name}}', '{company_name}'], $companyName, (string)$object['text']);
             }
         }
