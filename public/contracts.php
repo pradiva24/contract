@@ -33,6 +33,7 @@ page_header('Contract Records');
   <td><div class="contract-actions">
    <a class="btn light" target="_blank" rel="noopener" href="<?=e(url('contract-action.php?id='.(int)$r['id'].'&action=preview'))?>">Preview</a>
    <a class="btn dark" href="<?=e(url('contract-action.php?id='.(int)$r['id'].'&action=download'))?>">Download</a>
+   <a class="btn light" href="<?=e(url('contract-email-history.php?id='.(int)$r['id']))?>">Email history</a>
    <form method="post" action="<?=e(url('contract-action.php'))?>" onsubmit="return confirm('Generate or refresh this contract PDF?')"><?=csrf_field()?><input type="hidden" name="id" value="<?=(int)$r['id']?>"><input type="hidden" name="action" value="generate"><button class="btn light" type="submit">Generate</button></form>
    <form method="post" action="<?=e(url('contract-action.php'))?>" onsubmit="return confirm('Send contract PDF to <?=e(addslashes($r['recipient_email']))?>?')"><?=csrf_field()?><input type="hidden" name="id" value="<?=(int)$r['id']?>"><input type="hidden" name="action" value="email"><button class="btn" type="submit">Send Email</button></form>
   </div></td>
