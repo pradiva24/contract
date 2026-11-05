@@ -37,7 +37,7 @@ function addNodeFromData(o,onAdded){
   const rows=Array.isArray(o.rows)?o.rows:[['Service / Product','Description','Contract Rate'],['Service name','Description','Rate']];
   const cols=Math.max(1,Math.min(6,Number(o.columns)||3)),rowH=(o.height||180)/rows.length,colW=(o.width||600)/cols;
   const group=new Konva.Group({x:o.x||60,y:o.y||60,width:o.width||600,height:o.height||180,draggable:!o.locked,dragDistance:0});
-  rows.forEach((row,ri)=>{for(let ci=0;ci<cols;ci++){const x=ci*colW,y=ri*rowH;group.add(new Konva.Rect({x,y,width:colW,height:rowH,fill:ri===0?'#e9eef7':'#ffffff',stroke:'#667085',strokeWidth:1,listening:false}));group.add(new Konva.Text({x:x+7,y:y+5,width:colW-14,height:rowH-10,text:String(row[ci]??''),fontSize:ri===0?15:13,fontStyle:ri===0?'bold':'normal',fill:'#20242b',wrap:'word',listening:false}));}});
+  rows.forEach((row,ri)=>{for(let ci=0;ci<cols;ci++){const x=ci*colW,y=ri*rowH;group.add(new Konva.Rect({x,y,width:colW,height:rowH,fill:ri===0?'#e9eef7':'#ffffff',stroke:'#667085',strokeWidth:1,listening:true}));group.add(new Konva.Text({x:x+7,y:y+5,width:colW-14,height:rowH-10,text:String(row[ci]??''),fontSize:ri===0?15:13,fontStyle:ri===0?'bold':'normal',fill:'#20242b',wrap:'word',listening:false}));}});
   n=group;
  }
  else if(o.type==='image'&&o.src){const img=new Image();img.onload=()=>{const imageNode=new Konva.Image({x:o.x||60,y:o.y||60,width:o.width||240,height:o.height||160,image:img,draggable:!o.locked});imageNode.setAttr('studioData',o);imageNode.draggable(!o.locked);imageNode.listening(true);imageNode.on('mousedown touchstart',()=>setSelected(imageNode));imageNode.on('dragstart',()=>setSelected(imageNode));layer.add(imageNode);layer.draw();if(onAdded)onAdded(imageNode);};img.src=o.src;return;}
