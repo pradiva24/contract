@@ -13,14 +13,14 @@ function snapshot(){const s=JSON.stringify(doc);if(undoStack[historyIndex]===s)r
 function updateSaveState(){const el=$('saveState');if(el)el.textContent=dirty?'Unsaved changes':'All changes saved';}
 function updateHistoryButtons(){$('undoBtn').disabled=historyIndex<=0;$('redoBtn').disabled=historyIndex>=undoStack.length-1;}
 function objectData(node){return node.getAttr('studioData')||{};}
-function setSelected(node){selected=node;transformer.nodes(node?[node]:[]);refreshProperties();renderLayers();}
+function setSelected(node){selected=node;transformer.nodes(node?[node]:[]);transformer.moveToTop();refreshProperties();renderLayers();layer.draw();}
 function createStage(){
  const d=dims();$('canvasMount').innerHTML='';$('canvasMount').style.width=(d.width*scale)+'px';$('canvasMount').style.height=(d.height*scale)+'px';
  stage=new Konva.Stage({container:'canvasMount',width:d.width*scale,height:d.height*scale});
  layer=new Konva.Layer();layer.scale({x:scale,y:scale});stage.add(layer);
  const bg=new Konva.Rect({x:0,y:0,width:d.width,height:d.height,fill:page().background||'#fff',listening:false});layer.add(bg);bg.moveToBottom();
  transformer=new Konva.Transformer({rotateEnabled:true,keepRatio:false,anchorSize:8,borderStroke:'#2563eb',anchorStroke:'#2563eb',anchorFill:'#fff'});layer.add(transformer);
- (page().objects||[]).forEach(addNodeFromData);
+ (page().objects||[]).forEach(addNodeFromData);transformer.moveToTop();
  stage.on('click tap',e=>{if(e.target===stage||e.target===bg){setSelected(null);return;}let n=e.target;while(n&&n.getParent()!==layer)n=n.getParent();setSelected(n&&n!==transformer?n:null);});
  stage.on('dragend transformend',()=>{syncSelected();snapshot();});
  layer.draw();updateDimensions();renderPageList();renderLayers();
