@@ -28,8 +28,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'save_
         studio_json_response(['ok'=>false, 'message'=>'Unsupported document structure.'], 422);
     }
     $json = json_encode($document, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
-    if ($json === false || strlen($json) > 5 * 1024 * 1024) {
-        studio_json_response(['ok'=>false, 'message'=>'Document exceeds the 5 MB limit.'], 413);
+    if ($json === false || strlen($json) > 7 * 1024 * 1024) {
+        studio_json_response(['ok'=>false, 'message'=>'Template exceeds the 7 MB server limit. Please use smaller images.'], 413);
     }
 
     try {
