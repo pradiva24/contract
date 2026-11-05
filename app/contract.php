@@ -116,7 +116,10 @@ function generate_contract_pdf(int $id, int $companyId): string {
                 $font = preg_replace('/[^a-zA-Z0-9 ,_-]/', '', (string)($object['fontFamily'] ?? 'Arial')) ?: 'Arial';
                 $color = preg_match('/^#[0-9a-fA-F]{6}$/', (string)($object['fill'] ?? '')) ? $object['fill'] : '#111111';
                 $align = in_array(($object['align'] ?? 'left'), ['left','center','right'], true) ? $object['align'] : 'left';
-                $style .= 'font-family:'.htmlspecialchars($font, ENT_QUOTES, 'UTF-8').',DejaVu Sans,sans-serif;font-size:'.$fontSize.'px;color:'.$color.';text-align:'.$align.';font-weight:'.(($object['fontStyle'] ?? '') === 'bold' ? '700' : '400').';white-space:pre-wrap;overflow-wrap:break-word;';
+                $fontStyle = strtolower(trim((string)($object['fontStyle'] ?? 'normal')));
+                $fontWeight = in_array($fontStyle, ['bold','bold italic'], true) ? '700' : '400';
+                $fontItalic = in_array($fontStyle, ['italic','bold italic'], true) ? 'italic' : 'normal';
+                $style .= 'font-family:'.htmlspecialchars($font, ENT_QUOTES, 'UTF-8').',DejaVu Sans,sans-serif;font-size:'.$fontSize.'px;color:'.$color.';text-align:'.$align.';font-weight:'.$fontWeight.';font-style:'.$fontItalic.';line-height:1.2;white-space:pre-wrap;overflow-wrap:break-word;word-wrap:break-word;';
                 $elements .= '<div class="element text" style="'.$style.'">'.$text.'</div>';
             } elseif ($type === 'rect') {
                 $fill = preg_match('/^#[0-9a-fA-F]{6}$/', (string)($object['fill'] ?? '')) ? $object['fill'] : '#286900';
@@ -124,13 +127,20 @@ function generate_contract_pdf(int $id, int $companyId): string {
                 $elements .= '<div class="element" style="'.$style.'background:'.$fill.';border-radius:'.$radius.'px"></div>';
             } elseif ($type === 'table') {
                 $rows = is_array($object['rows'] ?? null) ? $object['rows'] : [];
-                $rowHeight = max(20, (float)($object['rowHeight'] ?? 40)); $rowHeights = is_array($object['rowHeights'] ?? null) ? $object['rowHeights'] : []; $columnWidths = is_array($object['columnWidths'] ?? null) ? $object['columnWidths'] : []; $columnWidthTotal = array_sum(array_map(static fn($w) => max(1, (float)$w), array_slice($columnWidths, 0, max(1, (int)($object['columns'] ?? 3))))); $borderWidth = max(0, min(8, (float)($object['borderWidth'] ?? 1))); $borderColor = preg_match('/^#[0-9a-fA-F]{6}$/', (string)($object['borderColor'] ?? '')) ? $object['borderColor'] : '#667085'; $tableHtml = '<table style="width:100%;height:100%;border-collapse:collapse;table-layout:fixed;font-size:12px">';
+                $rowHeight = max(20, (float)($object['rowHeight'] ?? 40)); $rowHeights = is_array($object['rowHeights'] ?? null) ? $object['rowHeights'] : []; $columnWidths = is_array($object['columnWidths'] ?? null) ? $object['columnWidths'] : []; $columnWidthTotal = array_sum(array_map(static fn($w) => max(1, (float)$w), array_slice($columnWidths, 0, max(1, (int)($object['columns'] ?? 3))))); $borderWidth = max(0, min(8, (float)($object['borderWidth'] ?? 1))); $borderColor = preg_match('/^#[0-9a-fA-F]{6}$/', (string)($object['borderColor'] ?? '')) ? $object['borderColor'] : '#667085'; $tableHtml = '<table style="width:100%;height:100%;border-collapse:collapse;table-layout:fixed;border-spacing:0;margin:0;padding:0">';
                 foreach ($rows as $ri => $row) {
                     if (!is_array($row)) continue;
                     $thisRowHeight = max(20, (float)($rowHeights[$ri] ?? $rowHeight)); $tableHtml .= '<tr style="height:'.$thisRowHeight.'px">';
                     foreach ($row as $ci => $cell) {
                         $cellBg = $ri === 0 ? ((string)($object['headerFill'] ?? '#e9eef7')) : ((string)($object['bodyFill'] ?? '#ffffff')); $fontColor = $ri === 0 ? ((string)($object['headerFontColor'] ?? '#20242b')) : ((string)(($object['columnFontColors'] ?? [])[$ci] ?? $object['bodyFontColor'] ?? '#20242b')); $fontSize = $ri === 0 ? (int)($object['headerFontSize'] ?? 15) : (int)($object['bodyFontSize'] ?? 13); $fontFamily = preg_replace('/[^a-zA-Z0-9 ,_-]/', '', (string)($object['fontFamily'] ?? 'Arial')) ?: 'Arial';
-                        $cellWidth = isset($columnWidths[$ci]) && $columnWidthTotal > 0 ? (max(1, (float)$columnWidths[$ci]) / $columnWidthTotal * 100) : (100 / max(1, count($row))); $tableHtml .= '<td style="width:'.$cellWidth.'%;height:'.$thisRowHeight.'px;border:'.$borderWidth.'px solid '.$borderColor.';padding:5px;background:'.$cellBg.';color:'.$fontColor.';font-family:'.$fontFamily.';font-size:'.$fontSize.'px;font-weight:'.(in_array(($ri===0?($object['headerFontStyle']??'bold'):($object['bodyFontStyle']??'normal')),['bold','bold italic'],true)?'700':'400').';font-style:'.(in_array(($ri===0?($object['headerFontStyle']??'bold'):($object['bodyFontStyle']??'normal')),['italic','bold italic'],true)?'italic':'normal').';text-align:'.(in_array(($ri===0?($object['headerAlign']??'center'):($object['bodyAlign']??'center')),['left','center','right'],true)?($ri===0?($object['headerAlign']??'center'):($object['bodyAlign']??'center')):'center').';vertical-align:'.(in_array(($ri===0?($object['headerVerticalAlign']??'middle'):($object['bodyVerticalAlign']??'middle')),['top','middle','bottom'],true)?($ri===0?($object['headerVerticalAlign']??'middle'):($object['bodyVerticalAlign']??'middle')):'middle').'">'.htmlspecialchars((string)$cell, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8').'</td>';
+                        $cellWidth = isset($columnWidths[$ci]) && $columnWidthTotal > 0 ? (max(1, (float)$columnWidths[$ci]) / $columnWidthTotal * 100) : (100 / max(1, count($row))); $cellStyle = strtolower((string)($ri===0?($object['headerFontStyle']??'bold'):($object['bodyFontStyle']??'normal')));
+                        $cellAlign = (string)($ri===0?($object['headerAlign']??'center'):($object['bodyAlign']??'center'));
+                        $cellVAlign = (string)($ri===0?($object['headerVerticalAlign']??'middle'):($object['bodyVerticalAlign']??'middle'));
+                        if (!in_array($cellAlign,['left','center','right'],true)) $cellAlign='center';
+                        if (!in_array($cellVAlign,['top','middle','bottom'],true)) $cellVAlign='middle';
+                        if (!preg_match('/^#[0-9a-fA-F]{6}$/',$cellBg)) $cellBg='#ffffff';
+                        if (!preg_match('/^#[0-9a-fA-F]{6}$/',$fontColor)) $fontColor='#20242b';
+                        $tableHtml .= '<td style="width:'.$cellWidth.'%;height:'.$thisRowHeight.'px;max-height:'.$thisRowHeight.'px;border:'.$borderWidth.'px solid '.$borderColor.';padding:5px;overflow:hidden;background:'.$cellBg.';color:'.$fontColor.';font-family:'.htmlspecialchars($fontFamily,ENT_QUOTES,'UTF-8').',DejaVu Sans,sans-serif;font-size:'.$fontSize.'px;line-height:1.2;font-weight:'.(in_array($cellStyle,['bold','bold italic'],true)?'700':'400').';font-style:'.(in_array($cellStyle,['italic','bold italic'],true)?'italic':'normal').';text-align:'.$cellAlign.';vertical-align:'.$cellVAlign.';overflow-wrap:break-word;word-wrap:break-word">'.htmlspecialchars((string)$cell, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8').'</td>';
                     }
                     $tableHtml .= '</tr>';
                 }
@@ -152,16 +162,19 @@ function generate_contract_pdf(int $id, int $companyId): string {
     $html = '<!doctype html><html><head><meta charset="utf-8"><style>
       @page{size:A4 '.$orientation.';margin:0}
       html,body{margin:0;padding:0;font-family:DejaVu Sans,sans-serif}
-      .sheet{position:relative;overflow:hidden;page-break-after:always}
+      *{box-sizing:border-box}
+      .sheet{position:relative;display:block;overflow:hidden;page-break-after:always;margin:0;padding:0}
       .sheet:last-child{page-break-after:auto}
-      .element{position:absolute;box-sizing:border-box}
-      .text{line-height:1.15}
+      .element{position:absolute;box-sizing:border-box;margin:0;padding:0}
+      .text{line-height:1.2;white-space:pre-wrap;overflow:hidden}
       .image{display:block}
     </style></head><body>'.$pagesHtml.'</body></html>';
     $options = new \Dompdf\Options();
     $options->set('isRemoteEnabled', false);
     $options->set('isHtml5ParserEnabled', true);
     $options->set('defaultFont', 'DejaVu Sans');
+    // Contract Studio coordinates are CSS pixels at 96 DPI; keep Dompdf on the same scale.
+    $options->set('dpi', 96);
     $pdf = new \Dompdf\Dompdf($options);
     $pdf->setPaper('A4', $orientation);
     $pdf->loadHtml($html, 'UTF-8');
