@@ -60,7 +60,7 @@ function updateDimensions(){const d=dims();$('pageDimensions').textContent='A4 Â
 function setScale(v){scale=Math.max(.25,Math.min(1.5,v));createStage();$('zoomValue').textContent=Math.round(scale*100)+'%';}
 function uploadBackground(file){
  if(!file)return;
- if(!/^image\\/(png|jpeg|webp)$/.test(file.type)){alert('Choose a PNG, JPG or WebP image.');return;}
+ if(!['image/png','image/jpeg','image/webp'].includes(file.type)){alert('Choose a PNG, JPG or WebP image.');return;}
  const reader=new FileReader();
  reader.onerror=()=>alert('The selected background could not be read.');
  reader.onload=()=>{
