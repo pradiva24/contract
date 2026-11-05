@@ -15,6 +15,7 @@ function updateSaveState(){const el=$('saveState');if(el)el.textContent=dirty?'U
 function updateHistoryButtons(){$('undoBtn').disabled=historyIndex<=0;$('redoBtn').disabled=historyIndex>=undoStack.length-1;}
 function objectData(node){return node.getAttr('studioData')||{};}
 function setSelected(node){selected=node;transformer.nodes(node?[node]:[]);transformer.moveToTop();refreshProperties();renderLayers();layer.draw();}
+function replaceTableNode(data){const old=selected; if(old&&old.getParent()===layer)old.destroy(); selected=null; addNodeFromData(data); const node=layer.getChildren().find(n=>objectData(n).id===data.id); if(node)setSelected(node); layer.draw();}
 function createStage(){
  (page().objects||[]).forEach(o=>{if((o.type==='text'||o.type==='table')&&o.fontFamily)loadGoogleFont(o.fontFamily);});
  const d=dims();$('canvasMount').innerHTML='';$('canvasMount').style.width=(d.width*scale)+'px';$('canvasMount').style.height=(d.height*scale)+'px';
@@ -34,7 +35,7 @@ function editTableCell(group,cell){
  const d=objectData(group),ri=cell.getAttr('cellRow'),ci=cell.getAttr('cellCol');if(!d.rows||!d.rows[ri])return;
  const rect=$('canvasMount').getBoundingClientRect(),pos=cell.getAbsolutePosition(),area=document.createElement('textarea');
  area.value=String(d.rows[ri][ci]??'');area.className='inline-cell-editor';area.style.left=(rect.left+pos.x)+'px';area.style.top=(rect.top+pos.y)+'px';area.style.width=Math.max(70,(cell.width()-14)*scale)+'px';area.style.height=Math.max(32,(cell.height()-10)*scale)+'px';area.style.fontSize=Math.max(10,cell.fontSize()*scale)+'px';document.body.appendChild(area);area.focus();area.select();
- const finish=()=>{if(!area.isConnected)return;d.rows[ri][ci]=area.value;group.setAttr('studioData',d);area.remove();const id=d.id;createStage();const node=layer.getChildren().find(n=>objectData(n).id===id);if(node)setSelected(node);snapshot();};
+ const finish=()=>{if(!area.isConnected)return;d.rows[ri][ci]=area.value;group.setAttr('studioData',d);area.remove();replaceTableNode(d);snapshot();};
  area.addEventListener('blur',finish);area.addEventListener('keydown',e=>{if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();area.blur();}if(e.key==='Escape'){area.value=d.rows[ri][ci]??'';area.blur();}});
 }
 function changeTableDimensions(kind,delta){
@@ -133,11 +134,18 @@ $('propText').onchange=()=>{
  if(!selected)return;
  const d=objectData(selected);
  if(d.type==='table'){
-  const rows=$('propText').value.split(/\r?\n/).filter(Boolean).map(line=>line.split('\t'));
+  const rows=$('propText').value.split(/\r?\n/).map(line=>line.split('\t'));
   d.rows=rows.length?rows:[['Service / Product','Description','Contract Rate']];
-  d.columns=Math.max(1,...d.rows.map(row=>row.length));
-  d.width=d.width||660;d.height=d.height||210;selected.setAttr('studioData',d);
-  const id=d.id;createStage();const node=layer.getChildren().find(n=>objectData(n).id===id);if(node)setSelected(node);snapshot();
+  d.columns=Math.max(1,Math.min(10,...[Math.max(...d.rows.map(row=>row.length)),Number(d.columns)||1]));
+  d.rows=d.rows.map(row=>Array.from({length:d.columns},(_,i)=>String(row[i]??'')));
+  d.columnWidths=Array.isArray(d.columnWidths)?d.columnWidths.slice(0,d.columns):[];
+  while(d.columnWidths.length<d.columns)d.columnWidths.push(1);
+  d.columnFontColors=Array.isArray(d.columnFontColors)?d.columnFontColors.slice(0,d.columns):[];
+  while(d.columnFontColors.length<d.columns)d.columnFontColors.push(d.bodyFontColor||'#20242b');
+  d.rowHeights=Array.isArray(d.rowHeights)?d.rowHeights:[];
+  d.height=d.rows.reduce((sum,_,i)=>sum+(Number(d.rowHeights[i])||Number(d.rowHeight)||52),0);
+  d.width=Math.max(20,Number(d.width)||660);selected.setAttr('studioData',d);
+  replaceTableNode(d);snapshot();
  }else updateProp('text',()=>{if(selected instanceof Konva.Text){selected.text($('propText').value);const d=objectData(selected);d.text=selected.text();selected.setAttr('studioData',d);}});
 };
 function loadGoogleFont(family){if(!family||['Arial','Georgia','Times New Roman','Tahoma','Verdana','Courier New'].includes(family))return;const id='google-font-'+family.toLowerCase().replace(/[^a-z0-9]+/g,'-');if(document.getElementById(id))return;const link=document.createElement('link');link.id=id;link.rel='stylesheet';link.href='https://fonts.googleapis.com/css2?family='+encodeURIComponent(family).replace(/%20/g,'+')+':wght@400;500;600;700;800&display=swap';document.head.appendChild(link);}
