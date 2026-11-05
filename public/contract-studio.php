@@ -154,6 +154,22 @@ $csrf = csrf_token();
         <label>Y position<input id="propY" type="number"></label>
       </div>
       <label>Fill color<input id="propFill" type="color"></label>
+      <div id="tableProperties" hidden>
+        <div class="side-heading">TABLE DESIGN</div>
+        <div class="prop-grid">
+          <label>Row height (px)<input id="tableRowHeight" type="number" min="20" max="240"></label>
+          <label>Border width<input id="tableBorderWidth" type="number" min="0" max="8" step="0.5"></label>
+          <label>Header background<input id="tableHeaderFill" type="color"></label>
+          <label>Body background<input id="tableBodyFill" type="color"></label>
+          <label>Border color<input id="tableBorderColor" type="color"></label>
+          <label>Header font color<input id="tableHeaderFontColor" type="color"></label>
+          <label>Body font color<input id="tableBodyFontColor" type="color"></label>
+          <label>Font family<select id="tableFontFamily"><option>Arial</option><option>Inter</option><option>Roboto</option><option>Georgia</option><option>Times New Roman</option><option>Verdana</option><option>Tahoma</option><option>Courier New</option></select></label>
+          <label>Header font size<input id="tableHeaderFontSize" type="number" min="6" max="48"></label>
+          <label>Body font size<input id="tableBodyFontSize" type="number" min="6" max="48"></label>
+        </div>
+        <div id="columnFontColors"></div>
+      </div>
       <div class="prop-actions"><button id="bringForward" type="button">Bring forward</button><button id="sendBackward" type="button">Send backward</button></div>
       <button id="lockObject" class="tool-btn" type="button">Lock / Unlock</button>
     </div>
