@@ -1,0 +1,15 @@
+{
+  "name": "balitarantula/certificate-system",
+  "description": "Standalone certificate management system for Bali Tarantula Adventure",
+  "type": "project",
+  "require": {
+    "php": "^8.2",
+    "dompdf/dompdf": "^3.1",
+    "endroid/qr-code": "^6.0",
+    "phpmailer/phpmailer": "^6.10"
+  },
+  "config": { "optimize-autoloader": true, "sort-packages": true,
+    "platform": {
+      "php": "8.3.30"
+    } }
+}
