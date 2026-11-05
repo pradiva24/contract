@@ -90,7 +90,7 @@ function generate_contract_pdf(int $id, int $companyId): string {
                 foreach ($rows as $ri => $row) {
                     if (!is_array($row)) continue;
                     $tableHtml .= '<tr>';
-                    foreach ($row as $cell) {
+                    foreach ($row as $ci => $cell) {
                         $cellBg = $ri === 0 ? ((string)($object['headerFill'] ?? '#e9eef7')) : ((string)($object['bodyFill'] ?? '#ffffff')); $fontColor = $ri === 0 ? ((string)($object['headerFontColor'] ?? '#20242b')) : ((string)(($object['columnFontColors'] ?? [])[$ci] ?? $object['bodyFontColor'] ?? '#20242b')); $fontSize = $ri === 0 ? (int)($object['headerFontSize'] ?? 15) : (int)($object['bodyFontSize'] ?? 13); $fontFamily = preg_replace('/[^a-zA-Z0-9 ,_-]/', '', (string)($object['fontFamily'] ?? 'Arial')) ?: 'Arial';
                         $tableHtml .= '<td style="height:'.$rowHeight.'px;border:'.$borderWidth.'px solid '.$borderColor.';padding:5px;background:'.$cellBg.';color:'.$fontColor.';font-family:'.$fontFamily.';font-size:'.$fontSize.'px;vertical-align:middle">'.htmlspecialchars((string)$cell, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8').'</td>';
                     }
