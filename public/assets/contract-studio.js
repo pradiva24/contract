@@ -104,7 +104,7 @@ $('propText').onchange=()=>{
  if(!selected)return;
  const d=objectData(selected);
  if(d.type==='table'){
-  const rows=$('propText').value.split(/\\r?\\n/).filter(Boolean).map(line=>line.split('\\t'));
+  const rows=$('propText').value.split(/\r?\n/).filter(Boolean).map(line=>line.split('\t'));
   d.rows=rows.length?rows:[['Service / Product','Description','Contract Rate']];
   d.columns=Math.max(1,...d.rows.map(row=>row.length));
   d.width=d.width||660;d.height=d.height||210;selected.setAttr('studioData',d);
