@@ -56,7 +56,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         redirect('contracts.php');
     } catch (Throwable $e) {
         error_log('Contract create failed: '.$e->getMessage());
-        flash('error', 'Kontrak gagal disimpan. Periksa apakah migration 003 sudah dijalankan.');
+        flash('error', 'Kontrak gagal disimpan. Periksa konfigurasi database dan migration yang diperlukan.');
         redirect('contract-form.php');
     }
 }
