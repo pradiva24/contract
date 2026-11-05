@@ -88,7 +88,7 @@ $csrf = csrf_token();
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Contract Studio · <?=e($title)?></title>
 <link rel="stylesheet" href="<?=e(url('assets/app.css'))?>">
-<link rel="stylesheet" href="<?=e(url('assets/contract-studio.css?v=20261105f'))?>">
+<link rel="stylesheet" href="<?=e(url('assets/contract-studio.css?v=20261105g'))?>">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">\n<script src="https://cdn.jsdelivr.net/npm/konva@9.3.18/konva.min.js"></script>
 </head>
 <body class="studio-body">
@@ -149,6 +149,8 @@ $csrf = csrf_token();
       <label>Object name<input id="propName" type="text"></label>
       <label>Text content<textarea id="propText" rows="3"></textarea></label>
       <div class="prop-grid">
+        <label>Font family<select id="propFontFamily"><option value="Arial">Arial</option><option value="Inter">Inter</option><option value="Roboto">Roboto</option><option value="Open Sans">Open Sans</option><option value="Lato">Lato</option><option value="Montserrat">Montserrat</option><option value="Poppins">Poppins</option><option value="Nunito">Nunito</option><option value="Roboto Condensed">Roboto Condensed</option><option value="Playfair Display">Playfair Display</option><option value="Merriweather">Merriweather</option><option value="Lora">Lora</option><option value="Oswald">Oswald</option><option value="Raleway">Raleway</option><option value="Source Sans 3">Source Sans 3</option><option value="PT Sans">PT Sans</option><option value="DM Sans">DM Sans</option><option value="Ubuntu">Ubuntu</option><option value="Georgia">Georgia</option><option value="Times New Roman">Times New Roman</option></select></label>
+        <label>Font style<select id="propFontStyle"><option value="normal">Regular</option><option value="bold">Bold</option><option value="italic">Italic</option><option value="bold italic">Bold Italic</option></select></label>
         <label>Font size<input id="propFontSize" type="number" min="6" max="160"></label>
         <label>Text color<input id="propColor" type="color"></label>
         <label>Width<input id="propWidth" type="number" min="10"></label>
@@ -191,5 +193,5 @@ window.CONTRACT_STUDIO_CONFIG = {
   initialDocument: <?=json_encode($initial, JSON_UNESCAPED_SLASHES|JSON_UNESCAPED_UNICODE|JSON_HEX_TAG|JSON_HEX_APOS|JSON_HEX_AMP|JSON_HEX_QUOT)?>
 };
 </script>
-<script src="<?=e(url('assets/contract-studio.js?v=20261105f'))?>"></script>
+<script src="<?=e(url('assets/contract-studio.js?v=20261105g'))?>"></script>
 </body></html>
