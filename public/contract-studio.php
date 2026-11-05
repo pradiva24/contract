@@ -13,6 +13,10 @@ function studio_json_response(array $data, int $status = 200): never {
     exit;
 }
 
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && empty($_POST['action'])) {
+    studio_json_response(['ok'=>false, 'message'=>'Request body tidak diterima server. Periksa PHP post_max_size (disarankan minimal 10M) dan batas hosting.'], 413);
+}
+
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'save_template') {
     if (!hash_equals($_SESSION['csrf'] ?? '', (string)($_POST['_csrf'] ?? ''))) {
         studio_json_response(['ok'=>false, 'message'=>'Security token expired. Refresh the page.'], 419);
@@ -84,7 +88,7 @@ $csrf = csrf_token();
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Contract Studio · <?=e($title)?></title>
 <link rel="stylesheet" href="<?=e(url('assets/app.css'))?>">
-<link rel="stylesheet" href="<?=e(url('assets/contract-studio.css?v=20261105b'))?>">
+<link rel="stylesheet" href="<?=e(url('assets/contract-studio.css?v=20261105c'))?>">
 <script src="https://cdn.jsdelivr.net/npm/konva@9.3.18/konva.min.js"></script>
 </head>
 <body class="studio-body">
@@ -165,5 +169,5 @@ window.CONTRACT_STUDIO_CONFIG = {
   initialDocument: <?=json_encode($initial, JSON_UNESCAPED_SLASHES|JSON_UNESCAPED_UNICODE|JSON_HEX_TAG|JSON_HEX_APOS|JSON_HEX_AMP|JSON_HEX_QUOT)?>
 };
 </script>
-<script src="<?=e(url('assets/contract-studio.js?v=20261105b'))?>"></script>
+<script src="<?=e(url('assets/contract-studio.js?v=20261105c'))?>"></script>
 </body></html>
