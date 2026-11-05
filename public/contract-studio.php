@@ -53,8 +53,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'save_
         $version = (int)$versionQuery->fetchColumn();
         db()->prepare('INSERT INTO contract_template_versions(company_id,template_id,version_number,document_json,created_by) VALUES(?,?,?,?,?)')
             ->execute([$companyId, $id, $version, $json, $adminId]);
-        db()->commit();
         audit_company($companyId, 'contract_template_saved', 'contract_template', $id, 'Saved Contract Studio template version '.$version);
+        db()->commit();
         studio_json_response(['ok'=>true, 'id'=>$id, 'version'=>$version, 'message'=>'Template saved.']);
     } catch (Throwable $e) {
         if (db()->inTransaction()) db()->rollBack();
@@ -156,9 +156,9 @@ $csrf = csrf_token();
 <script>
 window.CONTRACT_STUDIO_CONFIG = {
   templateId: <?=json_encode($id)?>,
-  csrf: <?=json_encode($csrf)?>,
+  csrf: <?=json_encode($csrf, JSON_HEX_TAG|JSON_HEX_APOS|JSON_HEX_AMP|JSON_HEX_QUOT)?>,
   saveUrl: <?=json_encode(url('contract-studio.php'))?>,
-  initialDocument: <?=json_encode($initial, JSON_UNESCAPED_SLASHES|JSON_UNESCAPED_UNICODE)?>
+  initialDocument: <?=json_encode($initial, JSON_UNESCAPED_SLASHES|JSON_UNESCAPED_UNICODE|JSON_HEX_TAG|JSON_HEX_APOS|JSON_HEX_AMP|JSON_HEX_QUOT)?>
 };
 </script>
 <script src="<?=e(url('assets/contract-studio.js'))?>"></script>
