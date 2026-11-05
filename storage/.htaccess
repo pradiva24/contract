@@ -1,0 +1,7 @@
+# Prevent direct public access to generated PDFs, participant photos and other private uploads.
+Require all denied
+
+<IfModule !mod_authz_core.c>
+  Order allow,deny
+  Deny from all
+</IfModule>
