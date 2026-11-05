@@ -50,7 +50,7 @@ function addRect(){addObject({id:'obj-'+Date.now(),type:'rect',name:'Shape',x:10
 function addTable(){addObject({id:'obj-'+Date.now(),type:'table',name:'Contract rate table',x:60,y:180,width:660,height:210,columns:3,rows:[['SERVICE / PRODUCT','DESCRIPTION','CONTRACT RATE'],['ATV Single Ride','Single participant','IDR 000,000'],['ATV Tandem Ride','Two participants','IDR 000,000'],['Additional Service','Description','IDR 000,000']]});}
 function refreshProperties(){
  const empty=!selected;$('emptyProperties').hidden=!empty;$('objectProperties').hidden=empty;if(empty)return;
- const d=objectData(selected);$('propName').value=d.name||d.type||'Object';$('propText').value=selected instanceof Konva.Text?selected.text():'';$('propFontSize').value=selected.fontSize?selected.fontSize():24;
+ const d=objectData(selected);$('propName').value=d.name||d.type||'Object';$('propText').value=selected instanceof Konva.Text?selected.text():(d.type==='table'?(d.rows||[]).map(row=>row.join('\t')).join('\n'):'');$('propFontSize').value=selected.fontSize?selected.fontSize():24;
  $('propColor').value=selected.fill&&typeof selected.fill()==='string'&&selected.fill().startsWith('#')?selected.fill():'#111111';
  $('propFill').value=selected.fill&&typeof selected.fill()==='string'&&selected.fill().startsWith('#')?selected.fill():'#286900';
  $('propWidth').value=Math.round(selected.width()*selected.scaleX());$('propHeight').value=Math.round(selected.height()*selected.scaleY());$('propX').value=Math.round(selected.x());$('propY').value=Math.round(selected.y());
@@ -100,7 +100,17 @@ $('orientation').onchange=e=>{doc.orientation=e.target.value;setScale(scale);sna
 $('addPage').onclick=()=>{doc.pages.push({id:'page-'+Date.now(),background:'#ffffff',objects:[]});pageIndex=doc.pages.length-1;setSelected(null);createStage();snapshot();};
 $('zoomIn').onclick=()=>setScale(scale+.1);$('zoomOut').onclick=()=>setScale(scale-.1);$('fitPage').onclick=()=>setScale(.7);
 $('propName').onchange=()=>updateProp('name',()=>{const d=objectData(selected);d.name=$('propName').value;selected.setAttr('studioData',d);});
-$('propText').onchange=()=>updateProp('text',()=>{if(selected instanceof Konva.Text)selected.text($('propText').value);});
+$('propText').onchange=()=>{
+ if(!selected)return;
+ const d=objectData(selected);
+ if(d.type==='table'){
+  const rows=$('propText').value.split(/\\r?\\n/).filter(Boolean).map(line=>line.split('\\t'));
+  d.rows=rows.length?rows:[['Service / Product','Description','Contract Rate']];
+  d.columns=Math.max(1,...d.rows.map(row=>row.length));
+  d.width=d.width||660;d.height=d.height||210;selected.setAttr('studioData',d);
+  const id=d.id;createStage();const node=layer.getChildren().find(n=>objectData(n).id===id);if(node)setSelected(node);snapshot();
+ }else updateProp('text',()=>{if(selected instanceof Konva.Text)selected.text($('propText').value);});
+};
 $('propFontSize').onchange=()=>updateProp('fontSize',()=>{if(selected instanceof Konva.Text)selected.fontSize(Number($('propFontSize').value)||24);});
 $('propColor').onchange=()=>updateProp('color',()=>{if(selected instanceof Konva.Text)selected.fill($('propColor').value);});
 $('propFill').onchange=()=>updateProp('fill',()=>{if(selected.fill)selected.fill($('propFill').value);});
