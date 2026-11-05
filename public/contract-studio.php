@@ -88,7 +88,7 @@ $csrf = csrf_token();
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Contract Studio · <?=e($title)?></title>
 <link rel="stylesheet" href="<?=e(url('assets/app.css'))?>">
-<link rel="stylesheet" href="<?=e(url('assets/contract-studio.css?v=20261105c'))?>">
+<link rel="stylesheet" href="<?=e(url('assets/contract-studio.css?v=20261105d'))?>">
 <script src="https://cdn.jsdelivr.net/npm/konva@9.3.18/konva.min.js"></script>
 </head>
 <body class="studio-body">
@@ -169,5 +169,5 @@ window.CONTRACT_STUDIO_CONFIG = {
   initialDocument: <?=json_encode($initial, JSON_UNESCAPED_SLASHES|JSON_UNESCAPED_UNICODE|JSON_HEX_TAG|JSON_HEX_APOS|JSON_HEX_AMP|JSON_HEX_QUOT)?>
 };
 </script>
-<script src="<?=e(url('assets/contract-studio.js?v=20261105c'))?>"></script>
+<script src="<?=e(url('assets/contract-studio.js?v=20261105d'))?>"></script>
 </body></html>
