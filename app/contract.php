@@ -86,19 +86,19 @@ function generate_contract_pdf(int $id, int $companyId): string {
                 $elements .= '<div class="element" style="'.$style.'background:'.$fill.';border-radius:'.$radius.'px"></div>';
             } elseif ($type === 'table') {
                 $rows = is_array($object['rows'] ?? null) ? $object['rows'] : [];
-                $tableHtml = '<table style="width:100%;height:100%;border-collapse:collapse;table-layout:fixed;font-size:12px">';
+                $rowHeight = max(20, (float)($object['rowHeight'] ?? 40)); $borderWidth = max(0, min(8, (float)($object['borderWidth'] ?? 1))); $borderColor = preg_match('/^#[0-9a-fA-F]{6}$/', (string)($object['borderColor'] ?? '')) ? $object['borderColor'] : '#667085'; $tableHtml = '<table style="width:100%;height:100%;border-collapse:collapse;table-layout:fixed;font-size:12px">';
                 foreach ($rows as $ri => $row) {
                     if (!is_array($row)) continue;
                     $tableHtml .= '<tr>';
                     foreach ($row as $cell) {
-                        $cellBg = $ri === 0 ? '#e9eef7' : '#ffffff';
-                        $tableHtml .= '<td style="border:1px solid #667085;padding:5px;background:'.$cellBg.';vertical-align:middle">'.htmlspecialchars((string)$cell, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8').'</td>';
+                        $cellBg = $ri === 0 ? ((string)($object['headerFill'] ?? '#e9eef7')) : ((string)($object['bodyFill'] ?? '#ffffff')); $fontColor = $ri === 0 ? ((string)($object['headerFontColor'] ?? '#20242b')) : ((string)(($object['columnFontColors'] ?? [])[$ci] ?? $object['bodyFontColor'] ?? '#20242b')); $fontSize = $ri === 0 ? (int)($object['headerFontSize'] ?? 15) : (int)($object['bodyFontSize'] ?? 13); $fontFamily = preg_replace('/[^a-zA-Z0-9 ,_-]/', '', (string)($object['fontFamily'] ?? 'Arial')) ?: 'Arial';
+                        $tableHtml .= '<td style="height:'.$rowHeight.'px;border:'.$borderWidth.'px solid '.$borderColor.';padding:5px;background:'.$cellBg.';color:'.$fontColor.';font-family:'.$fontFamily.';font-size:'.$fontSize.'px;vertical-align:middle">'.htmlspecialchars((string)$cell, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8').'</td>';
                     }
                     $tableHtml .= '</tr>';
                 }
                 $tableHtml .= '</table>';
                 $elements .= '<div class="element" style="'.$style.'">'.$tableHtml.'</div>';
-            } elseif ($type === 'image') {
+            } elseif ($type === 'icon') {\n                $glyph = htmlspecialchars((string)($object['glyph'] ?? ''), ENT_QUOTES, 'UTF-8'); $color = preg_match('/^#[0-9a-fA-F]{6}$/', (string)($object['fill'] ?? '')) ? $object['fill'] : '#20242b'; $fontSize = max(8, min(160, (float)($object['fontSize'] ?? 48))); $elements .= '<div class="element" style="'.$style.'font-family:DejaVu Sans,sans-serif;font-size:'.$fontSize.'px;color:'.$color.'">'.$glyph.'</div>';\n            } elseif ($type === 'image') {
                 $src = contract_pdf_image_src((string)($object['src'] ?? ''));
                 if ($src !== '') $elements .= '<img class="element image" src="'.$src.'" style="'.$style.'object-fit:contain" alt="">';
             }
