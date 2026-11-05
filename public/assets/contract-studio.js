@@ -2,6 +2,7 @@
 'use strict';
 const cfg=window.CONTRACT_STUDIO_CONFIG||{};
 if(!window.Konva){alert('Canvas library could not be loaded. Check your internet connection.');return;}
+Konva.dragDistance=0;Konva.hitOnDragEnabled=true;
 const A4={portrait:{width:794,height:1123,label:'210 × 297 mm'},landscape:{width:1123,height:794,label:'297 × 210 mm'}};
 let doc=cfg.initialDocument||{schema_version:1,orientation:'portrait',pages:[{id:'page-1',background:'#ffffff',objects:[]}]};
 if(!Array.isArray(doc.pages)||!doc.pages.length)doc.pages=[{id:'page-1',background:'#fff',objects:[]}];
@@ -17,23 +18,24 @@ function setSelected(node){selected=node;transformer.nodes(node?[node]:[]);trans
 function createStage(){
  const d=dims();$('canvasMount').innerHTML='';$('canvasMount').style.width=(d.width*scale)+'px';$('canvasMount').style.height=(d.height*scale)+'px';
  stage=new Konva.Stage({container:'canvasMount',width:d.width*scale,height:d.height*scale});
+ stage.container().style.touchAction='none';
  layer=new Konva.Layer();layer.scale({x:scale,y:scale});stage.add(layer);
  const bg=new Konva.Rect({x:0,y:0,width:d.width,height:d.height,fill:page().background||'#fff',listening:false});layer.add(bg);bg.moveToBottom();
  if(page().backgroundImage){const bgImg=new Image();bgImg.onload=()=>{const kimg=new Konva.Image({x:0,y:0,width:d.width,height:d.height,image:bgImg,listening:false});layer.add(kimg);kimg.setZIndex(1);layer.draw();};bgImg.src=page().backgroundImage;}
  transformer=new Konva.Transformer({rotateEnabled:true,keepRatio:false,anchorSize:8,borderStroke:'#2563eb',anchorStroke:'#2563eb',anchorFill:'#fff'});layer.add(transformer);
  (page().objects||[]).forEach(addNodeFromData);transformer.moveToTop();
  stage.on('click tap',e=>{if(e.target===stage||e.target===bg){setSelected(null);return;}let n=e.target;while(n&&n.getParent()!==layer)n=n.getParent();setSelected(n&&n!==transformer?n:null);});
- stage.on('dragstart',e=>{let n=e.target;while(n&&n.getParent()!==layer)n=n.getParent();if(n&&n!==bg)setSelected(n);});
+ stage.on('dragstart',e=>{let n=e.target;while(n&&n.getParent()!==layer)n=n.getParent();if(n&&n!==bg&&n!==transformer)setSelected(n);});
  stage.on('dragend transformend',()=>{syncSelected();snapshot();});
  layer.draw();updateDimensions();renderPageList();renderLayers();
 }
 function addNodeFromData(o,onAdded){
  let n;
- if(o.type==='text'){n=new Konva.Text({x:o.x||60,y:o.y||60,width:o.width||500,text:o.text||'Text',fontSize:o.fontSize||32,fontFamily:o.fontFamily||'Arial',fontStyle:o.fontStyle||'normal',fill:o.fill||'#111111',align:o.align||'left',draggable:!o.locked});}
+ if(o.type==='text'){n=new Konva.Text({x:o.x||60,y:o.y||60,width:o.width||500,text:o.text||'Text',fontSize:o.fontSize||32,fontFamily:o.fontFamily||'Arial',fontStyle:o.fontStyle||'normal',fill:o.fill||'#111111',align:o.align||'left',draggable:!o.locked,dragDistance:0});}
  else if(o.type==='rect'){n=new Konva.Rect({x:o.x||60,y:o.y||60,width:o.width||260,height:o.height||120,fill:o.fill||'#286900',cornerRadius:o.cornerRadius||0,draggable:!o.locked});}
- else if(o.type==='image'&&o.src){const img=new Image();img.onload=()=>{const imageNode=new Konva.Image({x:o.x||60,y:o.y||60,width:o.width||240,height:o.height||160,image:img,draggable:!o.locked});imageNode.setAttr('studioData',o);imageNode.draggable(!o.locked);imageNode.on('dragstart',()=>setSelected(imageNode));layer.add(imageNode);layer.draw();if(onAdded)onAdded(imageNode);};img.src=o.src;return;}
+ else if(o.type==='image'&&o.src){const img=new Image();img.onload=()=>{const imageNode=new Konva.Image({x:o.x||60,y:o.y||60,width:o.width||240,height:o.height||160,image:img,draggable:!o.locked});imageNode.setAttr('studioData',o);imageNode.draggable(!o.locked);imageNode.listening(true);imageNode.on('mousedown touchstart',()=>setSelected(imageNode));imageNode.on('dragstart',()=>setSelected(imageNode));layer.add(imageNode);layer.draw();if(onAdded)onAdded(imageNode);};img.src=o.src;return;}
  else return;
- n.setAttr('studioData',o);n.draggable(!o.locked);n.on('dragstart',()=>setSelected(n));layer.add(n);if(onAdded)onAdded(n);
+ n.setAttr('studioData',o);n.draggable(!o.locked);n.listening(true);n.on('mousedown touchstart',()=>setSelected(n));n.on('dragstart',()=>setSelected(n));layer.add(n);if(onAdded)onAdded(n);
 }
 function addObject(o){page().objects.push(o);addNodeFromData(o,n=>{layer.draw();setSelected(n);});layer.draw();snapshot();}
 function addText(text='Double-click to edit text',size=34){addObject({id:'obj-'+Date.now(),type:'text',name:'Text',text,x:80,y:100,width:540,fontSize:size,fill:'#111111'});}
