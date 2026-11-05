@@ -9,6 +9,21 @@ $company=$st->fetch();
 if(!$company){http_response_code(404);exit('Business not found or inactive.');}
 $fields=['business_name'=>'Business display name','business_address'=>'Business address','business_phone'=>'Phone / WhatsApp','business_email'=>'Contact email','business_website'=>'Website','mail_host'=>'SMTP host','mail_port'=>'SMTP port','mail_username'=>'SMTP username','mail_encryption'=>'SMTP encryption','mail_from_address'=>'From email address','mail_from_name'=>'From name','mail_reply_to'=>'Reply-to email','contract_email_subject'=>'Contract email subject','contract_email_body'=>'Contract email body (HTML supported)'];
 $errors=[];
+
+function save_company_brand_asset(int $companyId, string $key, string $field): void {
+ if(!isset($_FILES[$field]) || (int)($_FILES[$field]['error']??UPLOAD_ERR_NO_FILE)===UPLOAD_ERR_NO_FILE)return;
+ $file=$_FILES[$field];
+ if((int)$file['error']!==UPLOAD_ERR_OK)throw new RuntimeException('Upload failed for '.$field.'.');
+ if((int)$file['size']<1||(int)$file['size']>5*1024*1024)throw new RuntimeException('Brand image must be smaller than 5 MB.');
+ $info=@getimagesize($file['tmp_name']);
+ if(!$info||!in_array($info['mime'],['image/png','image/jpeg'],true))throw new RuntimeException('Only PNG and JPG images are supported for company branding.');
+ $ext=$info['mime']==='image/png'?'png':'jpg';
+ $dir=BASE_PATH.'/storage/company-branding/'.$companyId;
+ if(!is_dir($dir)&&!mkdir($dir,0775,true)&&!is_dir($dir))throw new RuntimeException('Unable to create company branding storage.');
+ $name=$key.'-'.bin2hex(random_bytes(8)).'.'.$ext;
+ if(!move_uploaded_file($file['tmp_name'],$dir.'/'.$name))throw new RuntimeException('Unable to save uploaded brand image.');
+ save_company_setting($companyId,$key,'company-branding/'.$companyId.'/'.$name);
+}
 if($_SERVER['REQUEST_METHOD']==='POST'){
  verify_csrf();$action=(string)($_POST['action']??'save');
  if($action==='save'){
@@ -23,6 +38,15 @@ if($_SERVER['REQUEST_METHOD']==='POST'){
    db()->beginTransaction();
    db()->prepare('UPDATE companies SET name=?,website_url=? WHERE id=?')->execute([$values['business_name'],$values['business_website']?:null,$companyId]);
    foreach($values as $key=>$value)save_company_setting($companyId,$key,$value);
+   foreach(['brand_logo_enabled','brand_stamp_enabled','brand_signature_enabled','brand_footer_enabled'] as $toggle)save_company_setting($companyId,$toggle,isset($_POST[$toggle])?'1':'0');
+   foreach(['brand_logo_x','brand_logo_y','brand_logo_width','brand_logo_height','brand_stamp_x','brand_stamp_y','brand_signature_x','brand_signature_y'] as $metric){
+    $raw=trim((string)($_POST[$metric]??''));
+    if($raw!==''&&!is_numeric($raw))throw new RuntimeException('Brand position and size values must be numeric.');
+    if($raw!=='')save_company_setting($companyId,$metric,(string)max(0,min(10000,(float)$raw)));
+   }
+   save_company_brand_asset($companyId,'brand_logo_path','brand_logo');
+   save_company_brand_asset($companyId,'brand_stamp_path','brand_stamp');
+   save_company_brand_asset($companyId,'brand_signature_path','brand_signature');
    $password=(string)($_POST['smtp_password']??'');if($password!=='')save_company_setting($companyId,'smtp_password_encrypted',company_secret_encrypt($password));
    db()->commit();audit_company($companyId,'company_settings_updated','company',$companyId,'Updated company profile and contract email settings.');
    flash('success','Business profile and contract email settings saved.');redirect('company-settings.php');
@@ -50,11 +74,27 @@ $values=[];foreach($fields as $key=>$label)$values[$key]=company_setting($compan
 page_header('Company Settings');
 ?>
 <?php foreach($errors as $error):?><div class="alert error"><?=e($error)?></div><?php endforeach;?>
-<form method="post" class="card"><?=csrf_field()?><input type="hidden" name="action" value="save"><h2>Business profile</h2><p class="muted">Profile information belongs to the selected business and is separate from other businesses.</p><div class="formgrid">
+<form method="post" enctype="multipart/form-data" class="card"><?=csrf_field()?><input type="hidden" name="action" value="save"><h2>Business profile</h2><p class="muted">Profile information belongs to the selected business and is separate from other businesses.</p><div class="formgrid">
 <?php foreach(array_slice($fields,0,5,true) as $key=>$label):?><div><label for="<?=$key?>"><?=e($label)?></label><input id="<?=$key?>" name="<?=$key?>" value="<?=e($values[$key])?>" <?=$key==='business_name'?'required':''?>></div><?php endforeach;?>
 </div><hr><h2>Contract SMTP settings</h2><p class="muted">Contract emails use this business's SMTP account. Certificate email settings remain unchanged.</p><div class="formgrid">
 <?php foreach(array_slice($fields,5,6,true) as $key=>$label):?><div><label for="<?=$key?>"><?=e($label)?></label><?php if($key==='mail_encryption'):?><select id="<?=$key?>" name="<?=$key?>"><?php foreach(['tls'=>'TLS / STARTTLS','ssl'=>'SSL','none'=>'None'] as $v=>$l):?><option value="<?=$v?>" <?=$values[$key]===$v?'selected':''?>><?=$l?></option><?php endforeach;?></select><?php else:?><input id="<?=$key?>" name="<?=$key?>" value="<?=e($values[$key])?>" <?=$key==='mail_port'?'type="number" min="1" max="65535"':''?> <?=$key==='mail_host'||$key==='mail_username'?'required':''?>><?php endif;?></div><?php endforeach;?>
 <div><label for="smtp_password">SMTP password</label><input id="smtp_password" type="password" name="smtp_password" autocomplete="new-password" placeholder="Leave blank to keep saved password"><small class="muted">Encrypted with APP_KEY. Never displayed after saving.</small></div></div>
+<hr><h2>PDF branding</h2>
+<p class="muted">Upload PNG/JPG assets (maximum 5 MB each). Logo, stamp and signature are overlaid on every generated PDF page. Adjust positions in canvas pixels; generate a new PDF to apply changes.</p>
+<div class="formgrid">
+<div><label for="brand_logo">Company logo</label><input id="brand_logo" type="file" name="brand_logo" accept="image/png,image/jpeg"><small class="muted">Current: <?=e(company_setting($companyId,'brand_logo_path')?'Uploaded':'Not uploaded')?></small></div>
+<div><label for="brand_stamp">Company stamp</label><input id="brand_stamp" type="file" name="brand_stamp" accept="image/png,image/jpeg"><small class="muted">Current: <?=e(company_setting($companyId,'brand_stamp_path')?'Uploaded':'Not uploaded')?></small></div>
+<div><label for="brand_signature">Authorized signature</label><input id="brand_signature" type="file" name="brand_signature" accept="image/png,image/jpeg"><small class="muted">Current: <?=e(company_setting($companyId,'brand_signature_path')?'Uploaded':'Not uploaded')?></small></div>
+</div>
+<div class="formgrid">
+<?php foreach(['brand_logo_enabled'=>'Show logo on every page','brand_stamp_enabled'=>'Show stamp on every page','brand_signature_enabled'=>'Show signature on every page','brand_footer_enabled'=>'Show business contact footer on every page'] as $key=>$label):?><div><label><input type="checkbox" name="<?=$key?>" value="1" <?=company_setting($companyId,$key,$key==='brand_logo_enabled'?'1':'0')==='1'?'checked':''?>> <?=e($label)?></label></div><?php endforeach;?>
+</div>
+<h3>Logo placement (pixels)</h3><div class="formgrid">
+<?php foreach(['brand_logo_x'=>'Logo X','brand_logo_y'=>'Logo Y','brand_logo_width'=>'Logo width','brand_logo_height'=>'Logo height'] as $key=>$label):?><div><label for="<?=$key?>"><?=e($label)?></label><input type="number" min="0" max="10000" name="<?=$key?>" id="<?=$key?>" value="<?=e(company_setting($companyId,$key,['brand_logo_x'=>'24','brand_logo_y'=>'24','brand_logo_width'=>'120','brand_logo_height'=>'60'][$key]))?>"></div><?php endforeach;?>
+</div>
+<h3>Stamp and signature placement (pixels)</h3><div class="formgrid">
+<?php foreach(['brand_stamp_x'=>'Stamp X','brand_stamp_y'=>'Stamp Y','brand_signature_x'=>'Signature X','brand_signature_y'=>'Signature Y'] as $key=>$label):?><div><label for="<?=$key?>"><?=e($label)?></label><input type="number" min="0" max="10000" name="<?=$key?>" id="<?=$key?>" value="<?=e(company_setting($companyId,$key,['brand_stamp_x'=>'680','brand_stamp_y'=>'900','brand_signature_x'=>'500','brand_signature_y'=>'900'][$key]))?>"></div><?php endforeach;?>
+</div>
 <hr><h2>Contract email content</h2><p class="muted">Available placeholders: <code>{business_name}</code>, <code>{company_name}</code>, <code>{contract_number}</code>, <code>{contract_date}</code>.</p><label for="contract_email_subject">Email subject</label><input id="contract_email_subject" name="contract_email_subject" value="<?=e($values['contract_email_subject'])?>"><label for="contract_email_body">Email body</label><textarea id="contract_email_body" name="contract_email_body" rows="7"><?=e($values['contract_email_body'])?></textarea><p><button class="btn" type="submit">Save company settings</button></p></form>
 <div class="card"><h2>Test company SMTP</h2><p class="muted">Save settings before sending a test email. The test uses only this business's SMTP credentials.</p><form method="post" class="actions"><?=csrf_field()?><input type="hidden" name="action" value="test"><input type="email" name="test_email" placeholder="recipient@example.com" required><button class="btn dark" type="submit">Send test email</button></form></div>
 <?php page_footer(); ?>
