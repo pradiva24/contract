@@ -101,12 +101,11 @@ if ($id > 0) {
     $companyId = $existingCompanyId;
     $st = db()->prepare('SELECT id,name,orientation,document_json FROM contract_templates WHERE id=? AND company_id=? LIMIT 1');
     $st->execute([$id, $companyId]);
+    $template = $st->fetch();
+    if (!$template) { http_response_code(404); exit('Template not found.'); }
 } elseif ($isSuper) {
     $companyId = max(0, (int)($_GET['company_id'] ?? 0));
     if (!studio_company_allowed($companyId)) { http_response_code(400); exit('Select a valid business before creating a template.'); }
-}
-    $template = $st->fetch();
-    if (!$template) { http_response_code(404); exit('Template not found.'); }
 }
 $initial = $template ? json_decode((string)$template['document_json'], true) : null;
 if (!is_array($initial)) {
