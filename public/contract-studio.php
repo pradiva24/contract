@@ -119,6 +119,7 @@ $csrf = csrf_token();
     <button class="side-item" id="sideImage" type="button"><b>▧</b><span>Upload image</span></button>
     <div class="side-heading">CONTRACT BLOCKS</div>
     <button class="side-item" id="addHeading" type="button"><b>H</b><span>Contract heading</span></button>
+    <button class="side-item" id="addCompanyVariable" type="button"><b>{ }</b><span>Company name variable</span></button>
     <button class="side-item" id="addProductTable" type="button"><b>▤</b><span>Product rate table</span></button>
     <button class="side-item" id="addTerms" type="button"><b>¶</b><span>Terms & conditions</span></button>
     <button class="side-item" id="addFooter" type="button"><b>▱</b><span>Contact footer</span></button>
