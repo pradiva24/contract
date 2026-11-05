@@ -129,6 +129,7 @@ $csrf = csrf_token();
 <script src="https://cdn.jsdelivr.net/npm/konva@9.3.18/konva.min.js"></script>
 </head>
 <body class="studio-body">
+<div id="studioToast" class="studio-toast" role="status" aria-live="polite" hidden></div>
 <header class="studio-topbar">
   <a class="studio-brand" href="<?=e(url('dashboard.php'))?>">CONTRACT <span>STUDIO</span></a>
   <input id="templateName" class="studio-name" maxlength="180" value="<?=e($title)?>" aria-label="Template name">
