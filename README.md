@@ -71,3 +71,15 @@ php -r "echo bin2hex(random_bytes(32)), PHP_EOL;"
 Add the generated value as `APP_KEY=... `. Keep the same key backed up securely. If it is lost or changed, previously encrypted company SMTP passwords cannot be decrypted. Never commit `.env` to GitHub.
 
 To configure a business SMTP account: select that business in Company Context (Super Admin), open Company Settings, save SMTP details and password, then use **Send test email**. Leave the password field blank to keep the existing encrypted password.
+
+### Company PDF branding
+
+Open **Company Settings → PDF branding** for the selected business to upload:
+- Company logo (PNG/JPG)
+- Company stamp (PNG/JPG)
+- Authorized signature (PNG/JPG)
+- Optional business contact footer
+
+Branding assets are stored under the private `storage/company-branding/<company_id>/` directory. Each asset is limited to 5 MB. The logo, stamp and signature can be enabled independently and their positions can be adjusted in canvas pixels. Enabled assets are overlaid on each page of newly generated contract PDFs. The contact footer uses the business address, phone and website.
+
+After changing branding, open Contract Records and click **Generate** for each contract whose PDF should be refreshed. Existing PDFs are not silently overwritten by a settings change. Company-specific branding and settings are isolated by company ID.
