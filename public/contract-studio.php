@@ -89,7 +89,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'save_
     } catch (Throwable $e) {
         if (db()->inTransaction()) db()->rollBack();
         error_log('Contract Studio save failed: '.$e->getMessage());
-        studio_json_response(['ok'=>false, 'message'=>'Unable to save template. Check server logs.'], 500);
+        $message = 'Unable to save template. Check server logs.';
+        if ($isSuper && (bool)config('APP_DEBUG', false)) {
+            $message .= ' Details: ' . substr($e->getMessage(), 0, 1200);
+        }
+        studio_json_response(['ok'=>false, 'message'=>$message], 500);
     }
 }
 
