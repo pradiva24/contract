@@ -157,33 +157,45 @@ function send_contract_email(int $id, int $companyId): void {
     $contract = contract_get_for_company($id, $companyId);
     $attachment = contract_pdf_path($id, $companyId);
     if (!class_exists(\PHPMailer\PHPMailer\PHPMailer::class)) throw new RuntimeException('PHPMailer is not installed. Run composer install.');
-    $subject = 'Contract ' . $contract['contract_number'] . ' — ' . $contract['company_name'];
-    $body = '<p>Dear '.htmlspecialchars((string)$contract['company_name'], ENT_QUOTES, 'UTF-8').',</p><p>Please find your contract attached as a PDF document.</p><p>Best regards,<br>'.htmlspecialchars(company_setting($companyId,'business_name','Bali Tarantula Adventure'), ENT_QUOTES, 'UTF-8').'</p>';
+    $get = static fn(string $key, string $fallback=''): string => company_setting($companyId, $key, $fallback);
+    $businessName = $get('business_name', 'Business');
+    $subjectTemplate = $get('contract_email_subject', 'Your contract from {business_name}');
+    $bodyTemplate = $get('contract_email_body', 'Dear {company_name},<br><br>Please find your contract attached as a PDF document.<br><br>Best regards,<br>{business_name}');
+    $replace = [
+        '{business_name}' => $businessName,
+        '{company_name}' => (string)$contract['company_name'],
+        '{contract_number}' => (string)$contract['contract_number'],
+        '{contract_date}' => (string)$contract['contract_date'],
+    ];
+    $subject = trim(strtr($subjectTemplate, $replace));
+    if ($subject === '') $subject = 'Your contract from '.$businessName;
+    $body = strtr($bodyTemplate, $replace);
     $log = db()->prepare("INSERT INTO contract_email_logs(company_id,contract_id,recipient_email,subject,status) VALUES(?,?,?,?, 'queued')");
     $log->execute([$companyId,$id,$contract['recipient_email'],$subject]);
     $logId = (int)db()->lastInsertId();
     try {
-        $get = static fn(string $key, string $fallback=''): string => company_setting($companyId,$key,$fallback);
         $mail = new \PHPMailer\PHPMailer\PHPMailer(true);
         $mail->isSMTP();
         $mail->Host = $get('mail_host',(string)config('MAIL_HOST',config('SMTP_HOST','')));
         $mail->SMTPAuth = true;
         $mail->Username = $get('mail_username',(string)config('MAIL_USERNAME',config('SMTP_USERNAME','')));
-        $mail->Password = (string)config('MAIL_PASSWORD',config('SMTP_PASSWORD',''));
+        $mail->Password = company_secret($companyId,'smtp_password_encrypted',(string)config('MAIL_PASSWORD',config('SMTP_PASSWORD','')));
         $mail->Port = (int)$get('mail_port',(string)config('MAIL_PORT',config('SMTP_PORT','587')));
         $encryption = strtolower($get('mail_encryption',(string)config('MAIL_ENCRYPTION',config('SMTP_ENCRYPTION','tls'))));
         if ($encryption === 'tls') $mail->SMTPSecure = \PHPMailer\PHPMailer\PHPMailer::ENCRYPTION_STARTTLS;
         elseif ($encryption === 'ssl') $mail->SMTPSecure = \PHPMailer\PHPMailer\PHPMailer::ENCRYPTION_SMTPS;
         elseif ($encryption === 'none') { $mail->SMTPSecure=''; $mail->SMTPAutoTLS=false; }
         $from = $get('mail_from_address',(string)config('MAIL_FROM_ADDRESS',config('SMTP_FROM_EMAIL','')));
-        $fromName = $get('mail_from_name',(string)config('MAIL_FROM_NAME',config('SMTP_FROM_NAME','Bali Tarantula Adventure')));
-        if ($mail->Host === '' || $mail->Username === '' || $mail->Password === '') throw new RuntimeException('SMTP host, username, and password must be configured in Settings/.env.');
-        if (!filter_var($from, FILTER_VALIDATE_EMAIL)) throw new RuntimeException('A valid From email address is required in Settings.');
+        $fromName = $get('mail_from_name',$businessName);
+        if ($mail->Host === '' || $mail->Username === '' || $mail->Password === '') throw new RuntimeException('SMTP host, username, and password must be configured in Company Settings or .env.');
+        if (!filter_var($from, FILTER_VALIDATE_EMAIL)) throw new RuntimeException('A valid From email address is required in Company Settings.');
         $mail->CharSet='UTF-8'; $mail->Timeout=25;
         $mail->setFrom($from,$fromName);
+        $replyTo = $get('mail_reply_to');
+        if ($replyTo !== '' && filter_var($replyTo,FILTER_VALIDATE_EMAIL)) $mail->addReplyTo($replyTo,$fromName);
         $mail->addAddress((string)$contract['recipient_email'],(string)$contract['company_name']);
         $mail->Subject=$subject; $mail->isHTML(true); $mail->Body=$body;
-        $mail->AltBody='Please find your contract attached as a PDF document.';
+        $mail->AltBody=trim(strip_tags(str_replace(['<br>','<br/>','<br />'], "\n", $body)));
         $mail->addAttachment($attachment, $contract['contract_number'].'.pdf', 'base64', 'application/pdf');
         $mail->send();
         db()->prepare("UPDATE contract_email_logs SET status='sent',sent_at=NOW() WHERE id=? AND company_id=?")->execute([$logId,$companyId]);
