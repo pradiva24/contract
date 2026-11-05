@@ -33,6 +33,45 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && empty($_POST['action'])) {
     studio_json_response(['ok'=>false, 'message'=>'Request body tidak diterima server. Periksa PHP post_max_size (disarankan minimal 10M) dan batas hosting.'], 413);
 }
 
+
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'import_google_docx') {
+    if (!hash_equals($_SESSION['csrf'] ?? '', (string)($_POST['_csrf'] ?? ''))) {
+        studio_json_response(['ok'=>false, 'message'=>'Security token expired. Refresh the page.'], 419);
+    }
+    $googleUrl = trim((string)($_POST['google_url'] ?? ''));
+    if (!preg_match('~^https://docs\\.google\\.com/document/d/([a-zA-Z0-9_-]{10,})~', $googleUrl, $match)) {
+        studio_json_response(['ok'=>false, 'message'=>'Link Google Docs tidak valid. Gunakan URL dokumen Google Docs.'], 422);
+    }
+    if (!function_exists('curl_init')) {
+        studio_json_response(['ok'=>false, 'message'=>'PHP cURL belum aktif di hosting. Aktifkan ekstensi cURL untuk import Google Docs.'], 500);
+    }
+    $exportUrl = 'https://docs.google.com/document/d/' . $match[1] . '/export?format=docx';
+    $ch = curl_init($exportUrl);
+    curl_setopt_array($ch, [
+        CURLOPT_RETURNTRANSFER => true,
+        CURLOPT_FOLLOWLOCATION => true,
+        CURLOPT_MAXREDIRS => 4,
+        CURLOPT_CONNECTTIMEOUT => 12,
+        CURLOPT_TIMEOUT => 35,
+        CURLOPT_USERAGENT => 'ContractStudio/1.0',
+        CURLOPT_HTTPHEADER => ['Accept: application/vnd.openxmlformats-officedocument.wordprocessingml.document'],
+    ]);
+    $docxBytes = curl_exec($ch);
+    $curlError = curl_error($ch);
+    $httpCode = (int)curl_getinfo($ch, CURLINFO_HTTP_CODE);
+    $contentType = (string)curl_getinfo($ch, CURLINFO_CONTENT_TYPE);
+    curl_close($ch);
+    if (!is_string($docxBytes) || $docxBytes === '' || $httpCode < 200 || $httpCode >= 300 || !str_starts_with($docxBytes, "PK")) {
+        $message = 'Google Docs tidak dapat diakses. Pastikan General access diatur ke Anyone with the link (Viewer), lalu coba lagi.';
+        if ($isSuper && in_array(strtolower((string)config('APP_DEBUG', 'false')), ['1','true','yes','on'], true) && $curlError !== '') $message .= ' ' . substr($curlError, 0, 300);
+        studio_json_response(['ok'=>false, 'message'=>$message], 422);
+    }
+    if (strlen($docxBytes) > 8 * 1024 * 1024) {
+        studio_json_response(['ok'=>false, 'message'=>'File Google Docs melebihi batas 8 MB.'], 413);
+    }
+    studio_json_response(['ok'=>true, 'filename'=>'google-docs-import.docx', 'docx_base64'=>base64_encode($docxBytes)]);
+}
+
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'save_template') {
     if (!hash_equals($_SESSION['csrf'] ?? '', (string)($_POST['_csrf'] ?? ''))) {
         studio_json_response(['ok'=>false, 'message'=>'Security token expired. Refresh the page.'], 419);
@@ -124,9 +163,10 @@ $csrf = csrf_token();
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Contract Studio · <?=e($title)?></title>
 <link rel="stylesheet" href="<?=e(url('assets/app.css'))?>">
-<link rel="stylesheet" href="<?=e(url('assets/contract-studio.css?v=20261106j'))?>">
+<link rel="stylesheet" href="<?=e(url('assets/contract-studio.css?v=20261106k'))?>">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
 <script src="https://cdn.jsdelivr.net/npm/konva@9.3.18/konva.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/mammoth@1.8.0/mammoth.browser.min.js"></script>
 </head>
 <body class="studio-body">
 <div id="studioToast" class="studio-toast" role="status" aria-live="polite" hidden></div>
@@ -137,6 +177,9 @@ $csrf = csrf_token();
     <span id="saveState" class="save-state">Unsaved changes</span>
     <button id="undoBtn" class="tool-btn" type="button" title="Undo">↶</button>
     <button id="redoBtn" class="tool-btn" type="button" title="Redo">↷</button>
+    <button id="importDocxBtn" class="tool-btn" type="button">Import DOCX</button>
+    <button id="importGoogleBtn" class="tool-btn" type="button">Import Google Docs</button>
+    <input id="importDocxInput" type="file" accept=".docx,application/vnd.openxmlformats-officedocument.wordprocessingml.document" hidden>
     <button id="saveBtn" class="studio-primary" type="button">Save template</button>
     <a class="tool-btn" href="<?=e(url('contract-templates.php'))?>">Exit</a>
   </div>
@@ -240,5 +283,5 @@ window.CONTRACT_STUDIO_CONFIG = {
   initialDocument: <?=json_encode($initial, JSON_UNESCAPED_SLASHES|JSON_UNESCAPED_UNICODE|JSON_HEX_TAG|JSON_HEX_APOS|JSON_HEX_AMP|JSON_HEX_QUOT)?>
 };
 </script>
-<script src="<?=e(url('assets/contract-studio.js?v=20261106c'))?>"></script>
+<script src="<?=e(url('assets/contract-studio.js?v=20261106d'))?>"></script>
 </body></html>
