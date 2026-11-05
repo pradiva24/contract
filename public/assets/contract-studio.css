@@ -23,3 +23,5 @@
 #tableProperties{border-top:1px solid var(--studio-line);margin-top:14px;padding-top:10px}#tableProperties .side-heading{margin:8px 3px}#columnFontColors label{display:flex;align-items:center;justify-content:space-between;gap:8px}#columnFontColors input{width:54px;min-width:54px}
 
 .inline-cell-editor{position:fixed;z-index:99999;resize:none;border:2px solid #2563eb;border-radius:3px;padding:4px;background:#fff;color:#20242b;outline:none;font-family:Arial,sans-serif;box-shadow:0 4px 18px #17203330}.table-dim-actions button{font-weight:700}#textBoxProperties{border-top:1px solid var(--studio-line);margin-top:12px;padding-top:8px}
+
+#objectProperties select{display:block;width:100%;margin-top:5px;border:1px solid #dfe3e9;border-radius:6px;padding:7px;font:12px Inter,Arial,sans-serif;color:#303744;background:#fff}#objectProperties select:disabled{opacity:.5;cursor:not-allowed}
