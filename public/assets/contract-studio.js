@@ -127,6 +127,74 @@ async function uploadImage(file){
  catch(err){alert(err.message||'Image upload failed.');}
 }
 
+
+function dataUrlFromBase64(mime,base64){return 'data:'+mime+';base64,'+base64;}
+async function convertDocxToStudio(arrayBuffer,fileName){
+ if(!window.mammoth)throw new Error('Library DOCX belum termuat. Periksa koneksi internet lalu refresh halaman.');
+ showToast('Membaca dokumen dan mengonversi layout...','info');
+ const options={convertImage:mammoth.images.imgElement(image=>image.read('base64').then(data=>({src:dataUrlFromBase64(image.contentType,data)})))};
+ const result=await mammoth.convertToHtml({arrayBuffer},options);
+ const parser=new DOMParser(),parsed=parser.parseFromString('<div>'+result.value+'</div>','text/html'),root=parsed.body.firstElementChild;
+ const nextDoc={schema_version:1,orientation:'portrait',pages:[]};
+ const pageWidth=794,margin=62,usableWidth=pageWidth-margin*2,pageHeight=1123,bottom=pageHeight-58;
+ let current={id:'page-'+Date.now(),background:'#ffffff',objects:[]},y=58,pageNo=1,objectNo=0;
+ const addPage=()=>{nextDoc.pages.push(current);pageNo++;current={id:'page-'+Date.now()+'-'+pageNo,background:'#ffffff',objects:[]};y=58;};
+ const ensureSpace=h=>{if(y+h>bottom&&current.objects.length)addPage();};
+ const addTextBlock=(text,el)=>{
+  text=(text||'').replace(/\u00a0/g,' ').trim();if(!text)return;
+  const tag=(el.tagName||'P').toUpperCase(),heading=/^H[1-6]$/.test(tag),size=heading?([1,2,3].includes(Number(tag[1]))?26:20):12;
+  const bold=heading||!!el.querySelector('strong,b'),italic=!!el.querySelector('em,i');
+  const align=['center','right'].includes(el.style.textAlign)?el.style.textAlign:'left';
+  const lines=Math.max(1,Math.ceil(text.length/(heading?48:92))),height=Math.max(size*1.55+8,lines*size*1.45+10);
+  ensureSpace(height+8);
+  current.objects.push({id:'import-'+(++objectNo),type:'text',name:heading?'Heading':'Imported paragraph',text,x:margin,y,width:usableWidth,height,fontSize:size,fontFamily:'Arial',fontStyle:(bold?'bold':'normal')+(italic?' italic':''),fill:'#20242b',align,wrap:'word'});
+  y+=height+8;
+ };
+ const addImage=async img=>{
+  const src=img.getAttribute('src')||'';if(!src.startsWith('data:image/'))return;
+  const probe=new Image();probe.src=src;await new Promise(resolve=>{probe.onload=resolve;probe.onerror=resolve;});
+  const ratio=probe.naturalWidth&&probe.naturalHeight?Math.min(usableWidth/probe.naturalWidth,300/probe.naturalHeight,1):1;
+  const w=Math.max(40,(probe.naturalWidth||240)*ratio),h=Math.max(30,(probe.naturalHeight||160)*ratio);ensureSpace(h+12);
+  current.objects.push({id:'import-'+(++objectNo),type:'image',name:'Imported image',src,x:margin,y,width:w,height:h});y+=h+12;
+ };
+ const addTable=table=>{
+  const rows=Array.from(table.querySelectorAll('tr')).map(tr=>Array.from(tr.querySelectorAll('th,td')).map(td=>td.innerText.trim()));
+  if(!rows.length)return;const cols=Math.max(1,Math.min(10,...rows.map(r=>r.length)));const normalized=rows.map(r=>Array.from({length:cols},(_,i)=>r[i]||''));
+  const rowHeight=42,height=Math.max(42,normalized.length*rowHeight);ensureSpace(height+12);
+  current.objects.push({id:'import-'+(++objectNo),type:'table',name:'Imported table',x:margin,y,width:usableWidth,height,columns:cols,columnWidths:Array(cols).fill(1),rowHeight,rowHeights:Array(normalized.length).fill(rowHeight),borderWidth:1,borderColor:'#9aa3af',headerFill:'#e9eef7',bodyFill:'#ffffff',headerFontColor:'#20242b',bodyFontColor:'#20242b',columnFontColors:Array(cols).fill('#20242b'),fontFamily:'Arial',headerFontSize:12,bodyFontSize:11,headerFontStyle:'bold',bodyFontStyle:'normal',headerAlign:'left',bodyAlign:'left',headerVerticalAlign:'middle',bodyVerticalAlign:'middle',rows:normalized});y+=height+12;
+ };
+ const walk=async node=>{
+  if(node.nodeType!==1)return;const tag=node.tagName.toUpperCase();
+  if(tag==='TABLE'){addTable(node);return;}
+  if(tag==='IMG'){await addImage(node);return;}
+  if(['P','H1','H2','H3','H4','H5','H6','BLOCKQUOTE','LI'].includes(tag)){const text=node.innerText||node.textContent||'';addTextBlock(text,node);for(const img of node.querySelectorAll('img'))await addImage(img);return;}
+  for(const child of node.children)await walk(child);
+ };
+ for(const child of root.children)await walk(child);
+ if(current.objects.length||!nextDoc.pages.length)nextDoc.pages.push(current);
+ if(!nextDoc.pages.length)throw new Error('Dokumen tidak memiliki teks, tabel, atau gambar yang dapat diimpor.');
+ doc=nextDoc;pageIndex=0;cfg.templateId=0;
+ const url=new URL(location.href);url.searchParams.delete('id');window.history.replaceState({},'',url);
+ $('templateName').value=(fileName||'Imported Contract').replace(/\\.docx$/i,'').slice(0,180);
+ undoStack=[];historyIndex=-1;selected=null;snapshot();createStage();dirty=true;updateSaveState();
+ showToast('Import berhasil: '+objectNo+' elemen pada '+doc.pages.length+' halaman. Periksa layout lalu Save Template.','success');
+ if(result.messages&&result.messages.length)console.info('DOCX import notes:',result.messages);
+}
+$('importDocxBtn').onclick=()=>$('importDocxInput').click();
+$('importDocxInput').onchange=async e=>{const file=e.target.files[0];e.target.value='';if(!file)return;try{if(file.size>8*1024*1024)throw new Error('Ukuran DOCX maksimal 8 MB.');await convertDocxToStudio(await file.arrayBuffer(),file.name);}catch(err){showToast('Import DOCX gagal: '+err.message,'error');}};
+$('importGoogleBtn').onclick=async()=>{
+ const link=prompt('Tempel link Google Docs. Pastikan akses dokumen: Anyone with the link → Viewer.');
+ if(!link)return;const btn=$('importGoogleBtn');btn.disabled=true;showToast('Mengambil dokumen Google Docs...','info');
+ try{
+  const body=new URLSearchParams({_csrf:cfg.csrf,action:'import_google_docx',google_url:link});
+  const response=await fetch(cfg.saveUrl,{method:'POST',headers:{'Content-Type':'application/x-www-form-urlencoded'},body});
+  const raw=await response.text();let data;try{data=JSON.parse(raw);}catch(_){throw new Error('Server tidak mengirim JSON. HTTP '+response.status+'.');}
+  if(!response.ok||!data.ok)throw new Error(data.message||'Google Docs gagal diimpor.');
+  const binary=atob(data.docx_base64),bytes=new Uint8Array(binary.length);for(let i=0;i<binary.length;i++)bytes[i]=binary.charCodeAt(i);
+  await convertDocxToStudio(bytes.buffer,'Google Docs - '+link.match(/document\\/d\\/([^/?]+)/)?.[1]+'.docx');
+ }catch(err){showToast('Import Google Docs gagal: '+err.message,'error');}finally{btn.disabled=false;}
+};
+
 $('addText').onclick=()=>addText();$('sideText').onclick=()=>addText();$('addHeading').onclick=()=>addText('OFFICIAL CONTRACT RATE 2026',42);$('addCompanyVariable').onclick=()=>{addObject({id:'obj-'+Date.now(),type:'text',name:'Company Name',text:'{{company_name}}',x:80,y:100,width:540,fontSize:32,fill:'#111111'});};
 $('addRect').onclick=addRect;$('sideShape').onclick=addRect;$('addImage').onclick=()=>$('imageInput').click();$('sideImage').onclick=()=>$('imageInput').click();$('imageInput').onchange=e=>{uploadImage(e.target.files[0]);e.target.value='';};
 $('addBackground').onclick=()=>$('backgroundInput').click();$('sideBackground').onclick=()=>$('backgroundInput').click();$('backgroundInput').onchange=e=>{uploadBackground(e.target.files[0]);e.target.value='';};
