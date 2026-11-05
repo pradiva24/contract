@@ -55,8 +55,8 @@ function generate_contract_pdf(int $id, int $companyId): string {
     $snapshot = json_decode((string)$contract['template_snapshot_json'], true);
     $document = contract_snapshot_document($contract);
     $orientation = ($snapshot['orientation'] ?? $document['orientation'] ?? 'portrait') === 'landscape' ? 'landscape' : 'portrait';
-    $width = $orientation === 'landscape' ? 1123 : 794;
-    $height = $orientation === 'landscape' ? 794 : 1123;
+    $pageWidth = $orientation === 'landscape' ? '297mm' : '210mm';
+    $pageHeight = $orientation === 'landscape' ? '210mm' : '297mm';
     $pagesHtml = '';
     foreach ($document['pages'] as $page) {
         $background = (string)($page['background'] ?? '#ffffff');
@@ -87,7 +87,7 @@ function generate_contract_pdf(int $id, int $companyId): string {
                 if ($src !== '') $elements .= '<img class="element image" src="'.$src.'" style="'.$style.'object-fit:contain" alt="">';
             }
         }
-        $pagesHtml .= '<div class="sheet" style="width:'.$width.'px;height:'.$height.'px;background:'.$background.'">'.$elements.'</div>';
+        $pagesHtml .= '<div class="sheet" style="width:'.$pageWidth.';height:'.$pageHeight.';background:'.$background.'">'.$elements.'</div>';
     }
     $html = '<!doctype html><html><head><meta charset="utf-8"><style>
       @page{size:A4 '.$orientation.';margin:0}
