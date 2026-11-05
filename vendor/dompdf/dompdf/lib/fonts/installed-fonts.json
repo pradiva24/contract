@@ -1,0 +1,61 @@
+{
+    "barlow condensed": {
+        "normal": "\/Applications\/MAMP\/htdocs\/tarantulacertificate\/vendor\/dompdf\/dompdf\/lib\/fonts\/barlow_condensed_normal_002a718a064fd0195383cad01b347819",
+        "500": "\/Applications\/MAMP\/htdocs\/tarantulacertificate\/vendor\/dompdf\/dompdf\/lib\/fonts\/barlow_condensed_500_e5ecc1de72211d169267ed746ca4e07f",
+        "600": "\/Applications\/MAMP\/htdocs\/tarantulacertificate\/vendor\/dompdf\/dompdf\/lib\/fonts\/barlow_condensed_600_1cc12afbeb7e96b6c6d86f7ec0a89be3",
+        "bold": "\/Applications\/MAMP\/htdocs\/tarantulacertificate\/vendor\/dompdf\/dompdf\/lib\/fonts\/barlow_condensed_bold_6cbbae963cf5e8789ac9ebf4f184a1f1",
+        "800": "barlow_condensed_800_45ee0c379ca731209557a9d9ff155662"
+    },
+    "bebas neue": {
+        "normal": "bebas_neue_normal_0d548d641c06b989c23912845f4b54e8"
+    },
+    "inter": {
+        "normal": "\/Applications\/MAMP\/htdocs\/tarantulacertificate\/vendor\/dompdf\/dompdf\/lib\/fonts\/inter_normal_5a66f8ceb794f00a7f54c797a21283b3",
+        "500": "\/Applications\/MAMP\/htdocs\/tarantulacertificate\/vendor\/dompdf\/dompdf\/lib\/fonts\/inter_500_efef4d9d61ac26570557ad601dea222a",
+        "600": "\/Applications\/MAMP\/htdocs\/tarantulacertificate\/vendor\/dompdf\/dompdf\/lib\/fonts\/inter_600_3604d9d49b61fc3b7c29c4259c86ff89",
+        "bold": "\/Applications\/MAMP\/htdocs\/tarantulacertificate\/vendor\/dompdf\/dompdf\/lib\/fonts\/inter_bold_02384cdf43e3d24b76c57c66dfd114bf",
+        "800": "inter_800_43e268268a3801a5ec2cf116ab01b114"
+    },
+    "lato": {
+        "normal": "\/Applications\/MAMP\/htdocs\/tarantulacertificate\/vendor\/dompdf\/dompdf\/lib\/fonts\/lato_normal_ed3f4ee6166e4a8d875402747e6fb7a0",
+        "bold": "\/Applications\/MAMP\/htdocs\/tarantulacertificate\/vendor\/dompdf\/dompdf\/lib\/fonts\/lato_bold_67cbea2936080f3d5601566280ed0b77",
+        "900": "lato_900_b9ec795f5d1922eb05bbf2195a5377be"
+    },
+    "montserrat": {
+        "normal": "\/Applications\/MAMP\/htdocs\/tarantulacertificate\/vendor\/dompdf\/dompdf\/lib\/fonts\/montserrat_normal_95c77d2830d640f06faa8261ded6db33",
+        "500": "\/Applications\/MAMP\/htdocs\/tarantulacertificate\/vendor\/dompdf\/dompdf\/lib\/fonts\/montserrat_500_2da570d656c67ef7297f2b0b288ce8bc",
+        "600": "\/Applications\/MAMP\/htdocs\/tarantulacertificate\/vendor\/dompdf\/dompdf\/lib\/fonts\/montserrat_600_da2f80af0e6d548904b08d3547b44b1c",
+        "bold": "\/Applications\/MAMP\/htdocs\/tarantulacertificate\/vendor\/dompdf\/dompdf\/lib\/fonts\/montserrat_bold_251805f22f376c685d401bff71e8e1d4",
+        "800": "montserrat_800_31c76b37778ac09639512894e95dee8a"
+    },
+    "open sans": {
+        "normal": "\/Applications\/MAMP\/htdocs\/tarantulacertificate\/vendor\/dompdf\/dompdf\/lib\/fonts\/open_sans_normal_fb8cbc3fa85ff7c317acbf9e1e9dedf3",
+        "500": "\/Applications\/MAMP\/htdocs\/tarantulacertificate\/vendor\/dompdf\/dompdf\/lib\/fonts\/open_sans_500_5ada76603ad473fc765110a1148dea31",
+        "600": "\/Applications\/MAMP\/htdocs\/tarantulacertificate\/vendor\/dompdf\/dompdf\/lib\/fonts\/open_sans_600_ec324eb3d6349b67548441ed0c3449eb",
+        "bold": "\/Applications\/MAMP\/htdocs\/tarantulacertificate\/vendor\/dompdf\/dompdf\/lib\/fonts\/open_sans_bold_ff234b764b5e232c41da6e83e382f185",
+        "800": "open_sans_800_21b83e2adfe3a30f299224c843259ea3"
+    },
+    "oswald": {
+        "normal": "\/Applications\/MAMP\/htdocs\/tarantulacertificate\/vendor\/dompdf\/dompdf\/lib\/fonts\/oswald_normal_590754e07a9a931b1c9d08f873cf4dfb",
+        "500": "\/Applications\/MAMP\/htdocs\/tarantulacertificate\/vendor\/dompdf\/dompdf\/lib\/fonts\/oswald_500_ebbe10bb070c22efcaf9d3efa6856793",
+        "600": "\/Applications\/MAMP\/htdocs\/tarantulacertificate\/vendor\/dompdf\/dompdf\/lib\/fonts\/oswald_600_e327e4456a99881edcd483bee70edea8",
+        "bold": "oswald_bold_3bbcf432548e58b1ea7198f51a573fad"
+    },
+    "playfair display": {
+        "normal": "\/Applications\/MAMP\/htdocs\/tarantulacertificate\/vendor\/dompdf\/dompdf\/lib\/fonts\/playfair_display_normal_ec27347baaef350a626d943a8fab74c6",
+        "bold": "playfair_display_bold_1e531eb7e3e1e9744697b9dd01c254b4"
+    },
+    "poppins": {
+        "normal": "\/Applications\/MAMP\/htdocs\/tarantulacertificate\/vendor\/dompdf\/dompdf\/lib\/fonts\/poppins_normal_41eae6f88194706e4cb26de3ac737d8a",
+        "500": "\/Applications\/MAMP\/htdocs\/tarantulacertificate\/vendor\/dompdf\/dompdf\/lib\/fonts\/poppins_500_2a496847b9018af565e71324a9cbc097",
+        "600": "\/Applications\/MAMP\/htdocs\/tarantulacertificate\/vendor\/dompdf\/dompdf\/lib\/fonts\/poppins_600_154dcc58b1e77916e556017f33cbcd2e",
+        "bold": "\/Applications\/MAMP\/htdocs\/tarantulacertificate\/vendor\/dompdf\/dompdf\/lib\/fonts\/poppins_bold_c611dfa86762dbed0a7fd1e3d5f1a36c",
+        "800": "poppins_800_9f149437ca2ffb987bc0596e97cba3b4"
+    },
+    "roboto": {
+        "normal": "\/Applications\/MAMP\/htdocs\/tarantulacertificate\/vendor\/dompdf\/dompdf\/lib\/fonts\/roboto_normal_826b21c6e9e390acde75d9452fa9e59f",
+        "500": "\/Applications\/MAMP\/htdocs\/tarantulacertificate\/vendor\/dompdf\/dompdf\/lib\/fonts\/roboto_500_6c31329457813f7a8ebc5a352147fef5",
+        "bold": "\/Applications\/MAMP\/htdocs\/tarantulacertificate\/vendor\/dompdf\/dompdf\/lib\/fonts\/roboto_bold_1a8c4a1acbd70e6f5947d46ac9a3bfc6",
+        "900": "roboto_900_9fe88a0540d48d043e0aa7abb9ab4e7b"
+    }
+}
