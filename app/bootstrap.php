@@ -13,6 +13,7 @@ if (!is_file($composerAutoload)) {
 require_once $composerAutoload;
 
 require_once BASE_PATH . '/app/helpers.php';
+require_once BASE_PATH . '/app/company.php';
 
 $envPath = BASE_PATH . '/.env';
 if (is_file($envPath)) {
