@@ -62,6 +62,8 @@ function generate_contract_pdf(int $id, int $companyId): string {
         $background = (string)($page['background'] ?? '#ffffff');
         if (!preg_match('/^#[0-9a-fA-F]{6}$/', $background)) $background = '#ffffff';
         $elements = '';
+        $backgroundImage = contract_pdf_image_src((string)($page['backgroundImage'] ?? ''));
+        if ($backgroundImage !== '') $elements .= '<img src="'.$backgroundImage.'" style="position:absolute;left:0;top:0;width:100%;height:100%;object-fit:cover" alt="">';
         foreach (($page['objects'] ?? []) as $object) {
             if (!is_array($object)) continue;
             $type = (string)($object['type'] ?? '');
@@ -82,7 +84,7 @@ function generate_contract_pdf(int $id, int $companyId): string {
                 $fill = preg_match('/^#[0-9a-fA-F]{6}$/', (string)($object['fill'] ?? '')) ? $object['fill'] : '#286900';
                 $radius = max(0, min(100, (float)($object['cornerRadius'] ?? 0)));
                 $elements .= '<div class="element" style="'.$style.'background:'.$fill.';border-radius:'.$radius.'px"></div>';
-            } elseif ($type === 'image') {
+            } elseif ($type === 'table') {\n                $rows = is_array($object['rows'] ?? null) ? $object['rows'] : [];\n                $tableHtml = '<table style="width:100%;height:100%;border-collapse:collapse;table-layout:fixed;font-size:12px">';\n                foreach ($rows as $ri => $row) { if (!is_array($row)) continue; $tableHtml .= '<tr>'; foreach ($row as $cell) { $bg = $ri === 0 ? '#e9eef7' : '#ffffff'; $tableHtml .= '<td style="border:1px solid #667085;padding:5px;background:'.$bg.';vertical-align:middle">'.htmlspecialchars((string)$cell, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8').'</td>'; } $tableHtml .= '</tr>'; }\n                $tableHtml .= '</table>'; $elements .= '<div class="element" style="'.$style.'">'.$tableHtml.'</div>';\n            } elseif ($type === 'image') {
                 $src = contract_pdf_image_src((string)($object['src'] ?? ''));
                 if ($src !== '') $elements .= '<img class="element image" src="'.$src.'" style="'.$style.'object-fit:contain" alt="">';
             }
