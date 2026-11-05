@@ -106,6 +106,9 @@ $csrf = csrf_token();
 <div class="studio-toolbar">
   <button class="tool-btn active" data-tool="select" type="button">↖ Select</button>
   <button class="tool-btn" id="addText" type="button">T Text</button>
+  <button class="tool-btn" id="addParagraph" type="button">¶ Paragraph box</button>
+  <label class="page-control">Font Awesome <select id="iconChoice"><option value="star">Star</option><option value="check">Check</option><option value="phone">Phone</option><option value="envelope">Envelope</option><option value="location">Location</option><option value="globe">Globe</option><option value="car">Car</option><option value="calendar">Calendar</option><option value="clock">Clock</option><option value="user">User</option><option value="camera">Camera</option><option value="heart">Heart</option><option value="plane">Plane</option><option value="wifi">Wi-Fi</option><option value="whatsapp">WhatsApp</option></select></label><button class="tool-btn" id="addIcon" type="button">＋ Icon</button>
+
   <button class="tool-btn" id="addRect" type="button">▭ Shape</button>
   <button class="tool-btn" id="addImage" type="button">▧ Add image</button>
   <button class="tool-btn" id="addBackground" type="button">▧ Upload background</button>
@@ -154,6 +157,7 @@ $csrf = csrf_token();
         <label>Y position<input id="propY" type="number"></label>
       </div>
       <label>Fill color<input id="propFill" type="color"></label>
+      <div id="textBoxProperties" hidden><div class="side-heading">TEXT BOX</div><p class="empty-properties">Paragraph wraps automatically inside the selected width and height.</p></div>
       <div id="tableProperties" hidden>
         <div class="side-heading">TABLE DESIGN</div>
         <div class="prop-grid">
@@ -168,6 +172,8 @@ $csrf = csrf_token();
           <label>Header font size<input id="tableHeaderFontSize" type="number" min="6" max="48"></label>
           <label>Body font size<input id="tableBodyFontSize" type="number" min="6" max="48"></label>
         </div>
+        <div class="prop-actions table-dim-actions"><button id="addTableRow" type="button">+ Add row</button><button id="removeTableRow" type="button">− Remove row</button></div>
+        <div class="prop-actions table-dim-actions"><button id="addTableColumn" type="button">+ Add column</button><button id="removeTableColumn" type="button">− Remove column</button></div>
         <div id="columnFontColors"></div>
       </div>
       <div class="prop-actions"><button id="bringForward" type="button">Bring forward</button><button id="sendBackward" type="button">Send backward</button></div>
