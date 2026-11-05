@@ -9,7 +9,7 @@ let pageIndex=0,scale=.7,stage,layer,transformer,selected=null,undoStack=[],hist
 const $=id=>document.getElementById(id);
 const page=()=>doc.pages[pageIndex];
 const dims=()=>A4[doc.orientation||'portrait'];
-function snapshot(){const s=JSON.stringify(doc);if(undoStack[historyIndex]===s)return;undoStack=undoStack.slice(0,historyIndex+1);undoStack.push(s);if(undoStack.length>80)undoStack.shift();historyIndex=history.length-1;dirty=true;updateSaveState();updateHistoryButtons();}
+function snapshot(){const s=JSON.stringify(doc);if(undoStack[historyIndex]===s)return;undoStack=undoStack.slice(0,historyIndex+1);undoStack.push(s);if(undoStack.length>80)undoStack.shift();historyIndex=undoStack.length-1;dirty=true;updateSaveState();updateHistoryButtons();}
 function updateSaveState(){const el=$('saveState');if(el)el.textContent=dirty?'Unsaved changes':'All changes saved';}
 function updateHistoryButtons(){$('undoBtn').disabled=historyIndex<=0;$('redoBtn').disabled=historyIndex>=undoStack.length-1;}
 function objectData(node){return node.getAttr('studioData')||{};}
