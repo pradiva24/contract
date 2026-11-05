@@ -33,6 +33,13 @@ function addNodeFromData(o,onAdded){
  let n;
  if(o.type==='text'){n=new Konva.Text({x:o.x||60,y:o.y||60,width:o.width||500,text:o.text||'Text',fontSize:o.fontSize||32,fontFamily:o.fontFamily||'Arial',fontStyle:o.fontStyle||'normal',fill:o.fill||'#111111',align:o.align||'left',draggable:!o.locked,dragDistance:0});}
  else if(o.type==='rect'){n=new Konva.Rect({x:o.x||60,y:o.y||60,width:o.width||260,height:o.height||120,fill:o.fill||'#286900',cornerRadius:o.cornerRadius||0,draggable:!o.locked});}
+ else if(o.type==='table'){
+  const rows=Array.isArray(o.rows)?o.rows:[['Service / Product','Description','Contract Rate'],['Service name','Description','Rate']];
+  const cols=Math.max(1,Math.min(6,Number(o.columns)||3)),rowH=(o.height||180)/rows.length,colW=(o.width||600)/cols;
+  const group=new Konva.Group({x:o.x||60,y:o.y||60,draggable:!o.locked,dragDistance:0});
+  rows.forEach((row,ri)=>{for(let ci=0;ci<cols;ci++){const x=ci*colW,y=ri*rowH;group.add(new Konva.Rect({x,y,width:colW,height:rowH,fill:ri===0?'#e9eef7':'#ffffff',stroke:'#667085',strokeWidth:1,listening:false}));group.add(new Konva.Text({x:x+7,y:y+5,width:colW-14,height:rowH-10,text:String(row[ci]??''),fontSize:ri===0?15:13,fontStyle:ri===0?'bold':'normal',fill:'#20242b',wrap:'word',listening:false}));}});
+  n=group;
+ }
  else if(o.type==='image'&&o.src){const img=new Image();img.onload=()=>{const imageNode=new Konva.Image({x:o.x||60,y:o.y||60,width:o.width||240,height:o.height||160,image:img,draggable:!o.locked});imageNode.setAttr('studioData',o);imageNode.draggable(!o.locked);imageNode.listening(true);imageNode.on('mousedown touchstart',()=>setSelected(imageNode));imageNode.on('dragstart',()=>setSelected(imageNode));layer.add(imageNode);layer.draw();if(onAdded)onAdded(imageNode);};img.src=o.src;return;}
  else return;
  n.setAttr('studioData',o);n.draggable(!o.locked);n.listening(true);n.on('mousedown touchstart',()=>setSelected(n));n.on('dragstart',()=>setSelected(n));layer.add(n);if(onAdded)onAdded(n);
@@ -40,6 +47,7 @@ function addNodeFromData(o,onAdded){
 function addObject(o){page().objects.push(o);addNodeFromData(o,n=>{layer.draw();setSelected(n);});layer.draw();snapshot();}
 function addText(text='Double-click to edit text',size=34){addObject({id:'obj-'+Date.now(),type:'text',name:'Text',text,x:80,y:100,width:540,fontSize:size,fill:'#111111'});}
 function addRect(){addObject({id:'obj-'+Date.now(),type:'rect',name:'Shape',x:100,y:140,width:280,height:110,fill:'#286900',cornerRadius:4});}
+function addTable(){addObject({id:'obj-'+Date.now(),type:'table',name:'Contract rate table',x:60,y:180,width:660,height:210,columns:3,rows:[['SERVICE / PRODUCT','DESCRIPTION','CONTRACT RATE'],['ATV Single Ride','Single participant','IDR 000,000'],['ATV Tandem Ride','Two participants','IDR 000,000'],['Additional Service','Description','IDR 000,000']]});}
 function refreshProperties(){
  const empty=!selected;$('emptyProperties').hidden=!empty;$('objectProperties').hidden=empty;if(empty)return;
  const d=objectData(selected);$('propName').value=d.name||d.type||'Object';$('propText').value=selected instanceof Konva.Text?selected.text():'';$('propFontSize').value=selected.fontSize?selected.fontSize():24;
@@ -58,27 +66,30 @@ function renderLayers(){const el=$('layerList');if(!el)return;el.innerHTML='';[.
 function renderPageList(){const el=$('pageList');el.innerHTML='';doc.pages.forEach((p,i)=>{const b=document.createElement('button');b.className='page-entry'+(i===pageIndex?' active':'');b.type='button';b.textContent='Page '+(i+1);b.onclick=()=>{pageIndex=i;setSelected(null);createStage();};el.appendChild(b);});}
 function updateDimensions(){const d=dims();$('pageDimensions').textContent='A4 · '+d.label;$('orientation').value=doc.orientation||'portrait';}
 function setScale(v){scale=Math.max(.25,Math.min(1.5,v));createStage();$('zoomValue').textContent=Math.round(scale*100)+'%';}
-function uploadBackground(file){
+function imageToCompactDataUrl(file,maxW=1400,maxH=1800,quality=.72){
+ return new Promise((resolve,reject)=>{
+  const reader=new FileReader();reader.onerror=()=>reject(new Error('Image file could not be read.'));
+  reader.onload=()=>{const img=new Image();img.onerror=()=>reject(new Error('Invalid image file.'));
+   img.onload=()=>{const ratio=Math.min(maxW/img.width,maxH/img.height,1);const canvas=document.createElement('canvas');canvas.width=Math.max(1,Math.round(img.width*ratio));canvas.height=Math.max(1,Math.round(img.height*ratio));const ctx=canvas.getContext('2d');ctx.drawImage(img,0,0,canvas.width,canvas.height);
+    let data=canvas.toDataURL('image/webp',quality);if(!data.startsWith('data:image/webp'))data=canvas.toDataURL('image/jpeg',quality);resolve(data);
+   };img.src=reader.result;
+  };reader.readAsDataURL(file);
+ });
+}
+
+async function uploadBackground(file){
  if(!file)return;
  if(!['image/png','image/jpeg','image/webp'].includes(file.type)){alert('Choose a PNG, JPG or WebP image.');return;}
- const reader=new FileReader();
- reader.onerror=()=>alert('The selected background could not be read.');
- reader.onload=()=>{
-  const img=new Image();
-  img.onerror=()=>alert('The selected image is invalid or unsupported.');
-  img.onload=()=>{
-   const maxW=1600,maxH=2200,ratio=Math.min(maxW/img.width,maxH/img.height,1);
-   const canvas=document.createElement('canvas');canvas.width=Math.max(1,Math.round(img.width*ratio));canvas.height=Math.max(1,Math.round(img.height*ratio));
-   const ctx=canvas.getContext('2d');ctx.fillStyle='#ffffff';ctx.fillRect(0,0,canvas.width,canvas.height);ctx.drawImage(img,0,0,canvas.width,canvas.height);
-   const data=canvas.toDataURL('image/jpeg',0.78);
-   if(data.length>1800000){alert('Background is still too large. Please choose a smaller image.');return;}
-   page().backgroundImage=data;snapshot();createStage();$('saveState').textContent='Background added · Save template to keep it';
-  };
-  img.src=reader.result;
- };
- reader.readAsDataURL(file);
+ try{const data=await imageToCompactDataUrl(file,1400,1900,.68);if(data.length>1400000)throw new Error('Background masih terlalu besar. Pilih gambar dengan resolusi lebih kecil.');page().backgroundImage=data;snapshot();createStage();$('saveState').textContent='Background added · Save template to keep it';}
+ catch(err){alert(err.message||'Background upload failed.');}
 }
-function uploadImage(file){if(!file)return;if(file.size>3*1024*1024){alert('Image limit is 3 MB.');return;}const reader=new FileReader();reader.onload=()=>{const src=reader.result;const img=new Image();img.onload=()=>{const max=420,ratio=Math.min(max/img.width,max/img.height,1);addObject({id:'obj-'+Date.now(),type:'image',name:file.name,x:80,y:100,width:img.width*ratio,height:img.height*ratio,src});};img.src=src;};reader.readAsDataURL(file);}
+async function uploadImage(file){
+ if(!file)return;
+ if(!['image/png','image/jpeg','image/webp'].includes(file.type)){alert('Choose a PNG, JPG or WebP image.');return;}
+ try{const src=await imageToCompactDataUrl(file,1200,1200,.72);const img=new Image();img.onload=()=>{const max=420,ratio=Math.min(max/img.width,max/img.height,1);addObject({id:'obj-'+Date.now(),type:'image',name:file.name,x:80,y:100,width:img.width*ratio,height:img.height*ratio,src});};img.onerror=()=>alert('Converted image could not be loaded.');img.src=src;}
+ catch(err){alert(err.message||'Image upload failed.');}
+}
+
 $('addText').onclick=()=>addText();$('sideText').onclick=()=>addText();$('addHeading').onclick=()=>addText('OFFICIAL CONTRACT RATE 2026',42);$('addCompanyVariable').onclick=()=>{addObject({id:'obj-'+Date.now(),type:'text',name:'Company Name',text:'{{company_name}}',x:80,y:100,width:540,fontSize:32,fill:'#111111'});};
 $('addRect').onclick=addRect;$('sideShape').onclick=addRect;$('addImage').onclick=()=>$('imageInput').click();$('sideImage').onclick=()=>$('imageInput').click();$('imageInput').onchange=e=>{uploadImage(e.target.files[0]);e.target.value='';};
 $('addBackground').onclick=()=>$('backgroundInput').click();$('sideBackground').onclick=()=>$('backgroundInput').click();$('backgroundInput').onchange=e=>{uploadBackground(e.target.files[0]);e.target.value='';};
@@ -99,7 +110,7 @@ $('sendBackward').onclick=()=>{if(selected){selected.moveDown();transformer.move
 $('lockObject').onclick=()=>{if(selected){const d=objectData(selected);d.locked=!d.locked;selected.draggable(!d.locked);selected.setAttr('studioData',d);snapshot();}};
 $('undoBtn').onclick=()=>{if(historyIndex>0){historyIndex--;doc=JSON.parse(undoStack[historyIndex]);createStage();dirty=true;updateSaveState();updateHistoryButtons();}};
 $('redoBtn').onclick=()=>{if(historyIndex<undoStack.length-1){historyIndex++;doc=JSON.parse(undoStack[historyIndex]);createStage();dirty=true;updateSaveState();updateHistoryButtons();}};
-$('saveBtn').onclick=async()=>{const btn=$('saveBtn');btn.disabled=true;syncAll();const body=new URLSearchParams({_csrf:cfg.csrf,action:'save_template',id:String(cfg.templateId||0),name:$('templateName').value,document_json:JSON.stringify(doc)});try{const res=await fetch(cfg.saveUrl,{method:'POST',headers:{'Content-Type':'application/x-www-form-urlencoded'},body});const data=await res.json();if(!data.ok)throw new Error(data.message||'Save failed');cfg.templateId=data.id;const url=new URL(location.href);url.searchParams.set('id',data.id);window.history.replaceState({},'',url);dirty=false;updateSaveState();$('saveState').textContent='Saved · v'+data.version;}catch(err){alert(err.message);}finally{btn.disabled=false;}};
+$('saveBtn').onclick=async()=>{const btn=$('saveBtn');btn.disabled=true;syncAll();const payload=JSON.stringify(doc);try{const payload=JSON.stringify(doc);if(payload.length>9500000)throw new Error('Template masih terlalu besar ('+(payload.length/1024/1024).toFixed(2)+' MB). Kurangi jumlah gambar atau gunakan gambar lebih kecil.');const body=new URLSearchParams({_csrf:cfg.csrf,action:'save_template',id:String(cfg.templateId||0),name:$('templateName').value,document_json:payload});const res=await fetch(cfg.saveUrl,{method:'POST',headers:{'Content-Type':'application/x-www-form-urlencoded'},body});const raw=await res.text();let data;try{data=JSON.parse(raw);}catch(_){throw new Error('Server tidak mengirim JSON. Kemungkinan batas PHP post_max_size / upload limit terlampaui atau terjadi PHP error. HTTP '+res.status+'.');}if(!res.ok||!data.ok)throw new Error(data.message||('Save failed · HTTP '+res.status));cfg.templateId=data.id;const url=new URL(location.href);url.searchParams.set('id',data.id);window.history.replaceState({},'',url);dirty=false;updateSaveState();$('saveState').textContent='Saved · v'+data.version;}catch(err){alert(err.message);}finally{btn.disabled=false;}};
 function syncAll(){layer.getChildren().forEach(n=>{const d=objectData(n);if(!d.id)return;d.x=Math.round(n.x());d.y=Math.round(n.y());d.width=Math.round(n.width()*n.scaleX());d.height=Math.round(n.height()*n.scaleY());if(n instanceof Konva.Text){d.text=n.text();d.fontSize=n.fontSize();d.fill=n.fill();}else if(n instanceof Konva.Rect)d.fill=n.fill();n.setAttr('studioData',d);});}
 window.addEventListener('keydown',e=>{if((e.key==='Delete'||e.key==='Backspace')&&selected&&document.activeElement.tagName!=='INPUT'&&document.activeElement.tagName!=='TEXTAREA')$('deleteObject').click();if((e.ctrlKey||e.metaKey)&&e.key.toLowerCase()==='s'){e.preventDefault();$('saveBtn').click();}});
 snapshot();dirty=false;updateSaveState();createStage();$('zoomValue').textContent=Math.round(scale*100)+'%';
