@@ -177,6 +177,10 @@ $csrf = csrf_token();
           <label>Body font size<input id="tableBodyFontSize" type="number" min="6" max="48"></label>
           <label>Header font style<select id="tableHeaderFontStyle"><option value="normal">Regular</option><option value="bold">Bold</option><option value="italic">Italic</option><option value="bold italic">Bold Italic</option></select></label>
           <label>Body font style<select id="tableBodyFontStyle"><option value="normal">Regular</option><option value="bold">Bold</option><option value="italic">Italic</option><option value="bold italic">Bold Italic</option></select></label>
+          <label>Header horizontal<select id="tableHeaderAlign"><option value="center">Center</option><option value="left">Left</option><option value="right">Right</option></select></label>
+          <label>Header vertical<select id="tableHeaderVerticalAlign"><option value="middle">Center</option><option value="top">Up</option><option value="bottom">Down</option></select></label>
+          <label>Body horizontal<select id="tableBodyAlign"><option value="center">Center</option><option value="left">Left</option><option value="right">Right</option></select></label>
+          <label>Body vertical<select id="tableBodyVerticalAlign"><option value="middle">Center</option><option value="top">Up</option><option value="bottom">Down</option></select></label>
         </div>
         <div class="prop-actions table-dim-actions"><button id="addTableRow" type="button">+ Add row</button><button id="removeTableRow" type="button">− Remove row</button></div>
         <div class="prop-actions table-dim-actions"><button id="addTableColumn" type="button">+ Add column</button><button id="removeTableColumn" type="button">− Remove column</button></div>
@@ -198,5 +202,5 @@ window.CONTRACT_STUDIO_CONFIG = {
   initialDocument: <?=json_encode($initial, JSON_UNESCAPED_SLASHES|JSON_UNESCAPED_UNICODE|JSON_HEX_TAG|JSON_HEX_APOS|JSON_HEX_AMP|JSON_HEX_QUOT)?>
 };
 </script>
-<script src="<?=e(url('assets/contract-studio.js?v=20261105n'))?>"></script>
+<script src="<?=e(url('assets/contract-studio.js?v=20261106a'))?>"></script>
 </body></html>
