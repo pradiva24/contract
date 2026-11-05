@@ -32,7 +32,7 @@ function createStage(){
 function editTableCell(group,cell){
  const d=objectData(group),ri=cell.getAttr('cellRow'),ci=cell.getAttr('cellCol');if(!d.rows||!d.rows[ri])return;
  const rect=$('canvasMount').getBoundingClientRect(),pos=cell.getAbsolutePosition(),area=document.createElement('textarea');
- area.value=String(d.rows[ri][ci]??'');area.className='inline-cell-editor';area.style.left=(rect.left+pos.x*scale)+'px';area.style.top=(rect.top+pos.y*scale)+'px';area.style.width=Math.max(70,(cell.width()-14)*scale)+'px';area.style.height=Math.max(32,(cell.height()-10)*scale)+'px';area.style.fontSize=Math.max(10,cell.fontSize()*scale)+'px';document.body.appendChild(area);area.focus();area.select();
+ area.value=String(d.rows[ri][ci]??'');area.className='inline-cell-editor';area.style.left=(rect.left+pos.x)+'px';area.style.top=(rect.top+pos.y)+'px';area.style.width=Math.max(70,(cell.width()-14)*scale)+'px';area.style.height=Math.max(32,(cell.height()-10)*scale)+'px';area.style.fontSize=Math.max(10,cell.fontSize()*scale)+'px';document.body.appendChild(area);area.focus();area.select();
  const finish=()=>{if(!area.isConnected)return;d.rows[ri][ci]=area.value;group.setAttr('studioData',d);area.remove();const id=d.id;createStage();const node=layer.getChildren().find(n=>objectData(n).id===id);if(node)setSelected(node);snapshot();};
  area.addEventListener('blur',finish);area.addEventListener('keydown',e=>{if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();area.blur();}if(e.key==='Escape'){area.value=d.rows[ri][ci]??'';area.blur();}});
 }
@@ -45,7 +45,7 @@ function changeTableDimensions(kind,delta){
 function addNodeFromData(o,onAdded){
  let n;
  if(o.type==='text'){n=new Konva.Text({x:o.x||60,y:o.y||60,width:o.width||500,text:o.text||'Text',fontSize:o.fontSize||32,fontFamily:o.fontFamily||'Arial',fontStyle:o.fontStyle||'normal',fill:o.fill||'#111111',align:o.align||'left',draggable:!o.locked,dragDistance:0});}
- else if(o.type==='icon'){n=new Konva.Text({x:o.x||60,y:o.y||60,width:o.width||54,height:o.height||54,text:o.glyph||'\\uf00c',fontFamily:'Font Awesome 6 Free',fontStyle:'900',fontSize:o.fontSize||48,fill:o.fill||'#20242b',draggable:!o.locked,dragDistance:0});}
+ else if(o.type==='icon'){n=new Konva.Text({x:o.x||60,y:o.y||60,width:o.width||54,height:o.height||54,text:o.glyph||'\uf00c',fontFamily:'Font Awesome 6 Free',fontStyle:'900',fontSize:o.fontSize||48,fill:o.fill||'#20242b',draggable:!o.locked,dragDistance:0});}
  else if(o.type==='rect'){n=new Konva.Rect({x:o.x||60,y:o.y||60,width:o.width||260,height:o.height||120,fill:o.fill||'#286900',cornerRadius:o.cornerRadius||0,draggable:!o.locked});}
  else if(o.type==='table'){
   const rows=Array.isArray(o.rows)?o.rows:[['Service / Product','Description','Contract Rate'],['Service name','Description','Rate']];
@@ -61,8 +61,8 @@ function addNodeFromData(o,onAdded){
 function addObject(o){page().objects.push(o);addNodeFromData(o,n=>{layer.draw();setSelected(n);});layer.draw();snapshot();}
 function addText(text='Double-click to edit text',size=34){addObject({id:'obj-'+Date.now(),type:'text',name:'Text',text,x:80,y:100,width:540,height:Math.max(60,size*2),fontSize:size,fill:'#111111',wrap:'word'});}
 function addParagraph(){addObject({id:'obj-'+Date.now(),type:'text',name:'Paragraph',text:'Write your paragraph here. Text will wrap inside this box.',x:80,y:150,width:420,height:150,fontSize:18,fill:'#333333',wrap:'word'});}
-const faIcons={star:'\\uf005',check:'\\uf00c',phone:'\\uf095',envelope:'\\uf0e0',location:'\\uf3c5',globe:'\\uf0ac',car:'\\uf1b9',calendar:'\\uf073',clock:'\\uf017',user:'\\uf007',camera:'\\uf030',heart:'\\uf004',plane:'\\uf072',wifi:'\\uf1eb',whatsapp:'\\uf232'};
-function addIcon(){const name=$('iconChoice').value;addObject({id:'obj-'+Date.now(),type:'icon',name:'Icon '+name,icon:name,glyph:faIcons[name]||'\\uf00c',x:100,y:100,width:54,height:54,fill:'#20242b'});}
+const faIcons={star:'\uf005',check:'\uf00c',phone:'\uf095',envelope:'\uf0e0',location:'\uf3c5',globe:'\uf0ac',car:'\uf1b9',calendar:'\uf073',clock:'\uf017',user:'\uf007',camera:'\uf030',heart:'\uf004',plane:'\uf072',wifi:'\uf1eb',whatsapp:'\uf232'};
+function addIcon(){const name=$('iconChoice').value;addObject({id:'obj-'+Date.now(),type:'icon',name:'Icon '+name,icon:name,glyph:faIcons[name]||'\uf00c',x:100,y:100,width:54,height:54,fill:'#20242b'});}
 function addRect(){addObject({id:'obj-'+Date.now(),type:'rect',name:'Shape',x:100,y:140,width:280,height:110,fill:'#286900',cornerRadius:4});}
 function addTable(){addObject({id:'obj-'+Date.now(),type:'table',name:'Contract rate table',x:60,y:180,width:660,height:210,columns:3,rowHeight:52,borderWidth:1,borderColor:'#667085',headerFill:'#e9eef7',bodyFill:'#ffffff',headerFontColor:'#20242b',bodyFontColor:'#20242b',columnFontColors:['#20242b','#20242b','#20242b'],fontFamily:'Arial',headerFontSize:15,bodyFontSize:13,rows:[['SERVICE / PRODUCT','DESCRIPTION','CONTRACT RATE'],['ATV Single Ride','Single participant','IDR 000,000'],['ATV Tandem Ride','Two participants','IDR 000,000'],['Additional Service','Description','IDR 000,000']]});}
 function refreshProperties(){
