@@ -96,7 +96,7 @@ $csrf = csrf_token();
     <button id="undoBtn" class="tool-btn" type="button" title="Undo">↶</button>
     <button id="redoBtn" class="tool-btn" type="button" title="Redo">↷</button>
     <button id="saveBtn" class="studio-primary" type="button">Save template</button>
-    <a class="tool-btn" href="<?=e(url('templates.php'))?>">Exit</a>
+    <a class="tool-btn" href="<?=e(url('contract-templates.php'))?>">Exit</a>
   </div>
 </header>
 <div class="studio-toolbar">
