@@ -47,3 +47,27 @@ The starter ships with sensible defaults; fine-tune coordinates using Preview an
 - Do not expose `.env`, `storage/`, or `vendor/` publicly. Prefer setting the web server document root to this project's `public/` directory. If MAMP points to the project root, deny direct access to `app/`, `database/`, and `storage/` using server configuration.
 - Configure SMTP and send a test certificate before using with customers.
 - This is a production-oriented starter, but perform staging tests and backups before live deployment.
+
+## Multi-business contract settings
+
+After applying the multi-company migrations in order, Super Admin can select a business from **Company Context** and open **Company Settings**. A company admin can only open settings for their assigned business.
+
+Each business can maintain its own:
+- Display name, address, phone/WhatsApp, contact email and website
+- SMTP host, port, encryption, username, sender name/address and reply-to
+- Encrypted SMTP password
+- Contract email subject and HTML body
+
+Contract email placeholders: `{business_name}`, `{company_name}`, `{contract_number}`, and `{contract_date}`. Contract email delivery reads SMTP credentials from the contract's owning company, not from the currently selected browser context. Certificate email delivery continues using the existing global Certificate Settings.
+
+### Required application encryption key
+
+Before saving a company-specific SMTP password, add a private `APP_KEY` to the project root `.env` file. Generate a random key, for example:
+
+```bash
+php -r "echo bin2hex(random_bytes(32)), PHP_EOL;"
+```
+
+Add the generated value as `APP_KEY=... `. Keep the same key backed up securely. If it is lost or changed, previously encrypted company SMTP passwords cannot be decrypted. Never commit `.env` to GitHub.
+
+To configure a business SMTP account: select that business in Company Context (Super Admin), open Company Settings, save SMTP details and password, then use **Send test email**. Leave the password field blank to keep the existing encrypted password.
