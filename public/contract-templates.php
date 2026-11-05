@@ -5,7 +5,18 @@ admin_required();
 $companyId = require_company_id();
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     verify_csrf();
+    $action = (string)($_POST['action'] ?? 'set_default');
     $id = max(0, (int)($_POST['id'] ?? 0));
+    if ($action === 'delete') {
+        $check = db()->prepare('SELECT id,is_default FROM contract_templates WHERE id=? AND company_id=? AND is_active=1 LIMIT 1');
+        $check->execute([$id,$companyId]); $target=$check->fetch();
+        if (!$target) { flash('error','Template not found.'); redirect('contract-templates.php'); }
+        if ((int)$target['is_default'] === 1) { flash('error','Set another template as default before deleting this template.'); redirect('contract-templates.php'); }
+        db()->prepare('UPDATE contract_templates SET is_active=0 WHERE id=? AND company_id=?')->execute([$id,$companyId]);
+        audit_company($companyId,'contract_template_deleted','contract_template',$id,'Soft-deleted contract template.');
+        flash('success','Template deleted. Existing contract records remain unchanged.');
+        redirect('contract-templates.php');
+    }
     $check = db()->prepare('SELECT id FROM contract_templates WHERE id=? AND company_id=? AND is_active=1 LIMIT 1');
     $check->execute([$id,$companyId]);
     if (!$check->fetchColumn()) { flash('error','Template not found.'); redirect('contract-templates.php'); }
@@ -36,7 +47,7 @@ page_header('Contract Studio Templates');
 <div class="card" style="overflow-x:auto">
  <table><thead><tr><th>Template name</th><th>Page orientation</th><th>Last updated</th><th>Default</th><th>Action</th></tr></thead><tbody>
  <?php foreach($templates as $row): ?>
-  <tr><td><strong><?=e($row['name'])?></strong></td><td><?=e(ucfirst($row['orientation']))?></td><td><?=e($row['updated_at'])?></td><td><?=$row['is_default']?'<span class="badge">Default</span>':'—'?></td><td><div class="actions"><a class="btn light" href="<?=e(url('contract-studio.php?id='.(int)$row['id']))?>">Open editor</a><?php if(!$row['is_default']):?><form method="post" style="margin:0"><?=csrf_field()?><input type="hidden" name="id" value="<?=(int)$row['id']?>"><button class="btn dark" type="submit">Set default</button></form><?php endif;?></div></td></tr>
+  <tr><td><strong><?=e($row['name'])?></strong></td><td><?=e(ucfirst($row['orientation']))?></td><td><?=e($row['updated_at'])?></td><td><?=$row['is_default']?'<span class="badge">Default</span>':'—'?></td><td><div class="actions"><a class="btn light" href="<?=e(url('contract-studio.php?id='.(int)$row['id']))?>">Open editor</a><?php if(!$row['is_default']):?><form method="post" style="margin:0"><?=csrf_field()?><input type="hidden" name="id" value="<?=(int)$row['id']?>"><input type="hidden" name="action" value="set_default"><button class="btn dark" type="submit">Set default</button></form><?php endif;?><form method="post" style="margin:0" onsubmit="return confirm('Delete this template? Existing contracts will not be deleted.');"><?=csrf_field()?><input type="hidden" name="id" value="<?=(int)$row['id']?>"><input type="hidden" name="action" value="delete"><button class="btn danger" type="submit">Delete</button></form></div></td></tr>
  <?php endforeach; ?>
  <?php if(!$templates): ?><tr><td colspan="5" class="muted">No contract templates yet. Create your first design.</td></tr><?php endif; ?>
  </tbody></table>
