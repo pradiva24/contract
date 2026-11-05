@@ -3,8 +3,24 @@ declare(strict_types=1);
 require_once dirname(__DIR__) . '/app/bootstrap.php';
 admin_required();
 
-$companyId = require_company_id();
+$isSuper = is_global_super_admin();
 $adminId = (int)($_SESSION['admin']['id'] ?? 0);
+$companyId = $isSuper ? 0 : require_company_id();
+
+function studio_company_allowed(int $companyId): bool {
+    if ($companyId < 1) return false;
+    $st = db()->prepare('SELECT id FROM companies WHERE id=? AND is_active=1 LIMIT 1');
+    $st->execute([$companyId]);
+    if (!$st->fetchColumn()) return false;
+    return is_global_super_admin() || $companyId === require_company_id();
+}
+
+function studio_template_company(int $templateId): ?int {
+    $st = db()->prepare('SELECT company_id FROM contract_templates WHERE id=? AND is_active=1 LIMIT 1');
+    $st->execute([$templateId]);
+    $value = $st->fetchColumn();
+    return $value === false ? null : (int)$value;
+}
 
 function studio_json_response(array $data, int $status = 200): never {
     http_response_code($status);
@@ -22,6 +38,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'save_
         studio_json_response(['ok'=>false, 'message'=>'Security token expired. Refresh the page.'], 419);
     }
     $id = max(0, (int)($_POST['id'] ?? 0));
+    if ($id > 0) {
+        $existingCompanyId = studio_template_company($id);
+        if ($existingCompanyId === null || (!$isSuper && $existingCompanyId !== require_company_id())) {
+            studio_json_response(['ok'=>false, 'message'=>'Template not found or access denied.'], 404);
+        }
+        $companyId = $existingCompanyId;
+    } else {
+        $companyId = $isSuper ? max(0, (int)($_POST['company_id'] ?? 0)) : require_company_id();
+        if (!studio_company_allowed($companyId)) studio_json_response(['ok'=>false, 'message'=>'Select a valid business for this template.'], 422);
+    }
     $name = trim((string)($_POST['name'] ?? ''));
     $documentRaw = (string)($_POST['document_json'] ?? '');
     $document = json_decode($documentRaw, true);
@@ -70,8 +96,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'save_
 $id = max(0, (int)($_GET['id'] ?? 0));
 $template = null;
 if ($id > 0) {
+    $existingCompanyId = studio_template_company($id);
+    if ($existingCompanyId === null || (!$isSuper && $existingCompanyId !== require_company_id())) { http_response_code(404); exit('Template not found.'); }
+    $companyId = $existingCompanyId;
     $st = db()->prepare('SELECT id,name,orientation,document_json FROM contract_templates WHERE id=? AND company_id=? LIMIT 1');
     $st->execute([$id, $companyId]);
+} elseif ($isSuper) {
+    $companyId = max(0, (int)($_GET['company_id'] ?? 0));
+    if (!studio_company_allowed($companyId)) { http_response_code(400); exit('Select a valid business before creating a template.'); }
+}
     $template = $st->fetch();
     if (!$template) { http_response_code(404); exit('Template not found.'); }
 }
@@ -197,6 +230,7 @@ $csrf = csrf_token();
 <script>
 window.CONTRACT_STUDIO_CONFIG = {
   templateId: <?=json_encode($id)?>,
+  companyId: <?=json_encode($companyId)?>,
   csrf: <?=json_encode($csrf, JSON_HEX_TAG|JSON_HEX_APOS|JSON_HEX_AMP|JSON_HEX_QUOT)?>,
   saveUrl: <?=json_encode(url('contract-studio.php'))?>,
   initialDocument: <?=json_encode($initial, JSON_UNESCAPED_SLASHES|JSON_UNESCAPED_UNICODE|JSON_HEX_TAG|JSON_HEX_APOS|JSON_HEX_AMP|JSON_HEX_QUOT)?>
