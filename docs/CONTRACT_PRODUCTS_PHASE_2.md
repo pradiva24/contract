@@ -1,35 +1,36 @@
-# Contract Products & Records — Phase 2
+# Contract Records — Phase 2
 
 ## Tujuan
-Menambahkan katalog produk per perusahaan dan penyimpanan kontrak yang membawa snapshot data pada saat kontrak dibuat. Migration ini bersifat additive dan tidak mengubah tabel sertifikat yang sudah ada.
+Menyimpan kontrak yang dibuat dari template Contract Studio. Tidak ada katalog produk, item kontrak, input harga, atau editor isi kontrak pada form pembuatan.
 
 ## Urutan migration
 1. `20261105_001_multi_company_foundation.sql`
 2. `20261105_002_contract_studio.sql`
-3. `20261105_003_contract_products_and_records.sql`
+3. `20261105_003_contract_products_and_records.sql` (nama file dipertahankan agar tidak mengubah urutan migration yang sudah disiapkan pada branch).
 
-Backup database sebelum menjalankan migration. Jalankan setiap migration satu kali pada database aplikasi yang benar.
+Backup database sebelum menjalankan migration. Jalankan setiap migration satu kali.
 
-## Katalog produk
-- `contract_products`: nama, SKU, deskripsi, mata uang, publish price, contract/net price, status aktif.
-- `contract_product_inclusions`: daftar fasilitas/benefit produk.
-- `contract_product_gallery`: referensi file foto produk.
-- Semua tabel memiliki `company_id`; endpoint aplikasi wajib mengambil company dari sesi, bukan dari input browser.
+## Alur Create Contract
+Form hanya berisi:
+- Template kontrak: pilih template aktif milik company yang sedang login. Template default ditampilkan sebagai pilihan awal bila tersedia.
+- Company Name: nama perusahaan penerima.
+- Email: alamat penerima PDF.
 
-## Data kontrak
-- `contracts`: nomor kontrak unik per perusahaan, pelanggan, tanggal, status, total, referensi template, dan snapshot template.
-- `contract_items`: kuantitas, dua jenis harga, total baris, serta snapshot produk dalam JSON.
-- `contract_versions`: snapshot historis kontrak bernomor versi.
-- `contract_history`: jejak aktivitas.
+Isi kontrak dan harga berasal dari template yang dipilih. Placeholder `{{company_name}}` diganti dengan nama perusahaan penerima. Kontrak menyimpan snapshot nama template, nomor versi, dan seluruh `document_json` pada saat dibuat. Perubahan template setelah itu tidak boleh mengubah kontrak lama.
 
-## Aturan integritas yang harus dipertahankan oleh layer aplikasi
-1. Seluruh operasi baca/tulis harus memfilter `company_id = require_company_id()`.
-2. Jangan menerima `company_id` dari POST/GET untuk menentukan tenant.
-3. Saat kontrak dibuat, salin nama, deskripsi, harga, inclusions, dan referensi galeri yang relevan ke `product_snapshot_json`. Perubahan katalog berikutnya tidak boleh mengubah kontrak lama.
-4. Salin dokumen template aktif ke `template_snapshot_json`. Kontrak historis tidak boleh berubah ketika template diedit.
-5. Harga publik dan harga kontrak disimpan terpisah. Total kontrak dihitung dari harga kontrak, bukan publish price.
-6. File galeri disimpan melalui upload terproteksi dan company-scoped; jangan menyimpan upload sebagai base64 di JSON template untuk produksi.
-7. Status `signed` hanya boleh dicapai melalui alur tanda tangan yang tervalidasi; perubahan status dan pembuatan versi harus dicatat pada history.
+## Tabel
+- `contracts`: nomor kontrak, template/version, snapshot, nama perusahaan, email, tanggal, status, dan lokasi PDF.
+- `contract_email_logs`: riwayat percobaan pengiriman email (queued/sent/failed).
+- `contract_history`: audit aktivitas kontrak.
 
-## Catatan
-Migration ini menyiapkan skema database. Belum ada UI katalog, upload media, alur create contract, PDF final, atau e-signature dalam fase ini. Foreign key template menggunakan ID global, sehingga layer aplikasi tetap wajib memvalidasi bahwa template dan versi template berasal dari company yang sama sebelum menyimpan kontrak.
+## Isolasi dan integritas
+1. Semua operasi wajib memakai `company_id = require_company_id()`; jangan menerima tenant ID dari browser.
+2. Template dan versi harus diverifikasi berasal dari company aktif.
+3. Nomor kontrak unik per company.
+4. Simpan PDF di storage non-public dan layani melalui endpoint terproteksi.
+5. Email menggunakan konfigurasi SMTP aplikasi yang sudah ada; jangan menyimpan kredensial SMTP pada record kontrak.
+6. Email log harus mencatat setiap percobaan; status terakhir ditampilkan pada Contract Records.
+7. Jangan mengubah atau menghapus data sertifikat maupun tabel email sertifikat.
+
+## Batasan fase ini
+Migration ini menyiapkan struktur data. PDF renderer untuk format Canvas multi-page dan alur email kontrak harus diimplementasikan serta diuji sebelum fitur dianggap siap produksi. Editor Canvas saat ini menyimpan gambar sebagai data URL di JSON; ukuran snapshot perlu dibatasi dan aset produksi sebaiknya dipindahkan ke storage terproteksi.
