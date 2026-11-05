@@ -32,5 +32,20 @@ Isi kontrak dan harga berasal dari template yang dipilih. Placeholder `{{company
 6. Email log harus mencatat setiap percobaan; status terakhir ditampilkan pada Contract Records.
 7. Jangan mengubah atau menghapus data sertifikat maupun tabel email sertifikat.
 
-## Batasan fase ini
-Migration ini menyiapkan struktur data. PDF renderer untuk format Canvas multi-page dan alur email kontrak harus diimplementasikan serta diuji sebelum fitur dianggap siap produksi. Editor Canvas saat ini menyimpan gambar sebagai data URL di JSON; ukuran snapshot perlu dibatasi dan aset produksi sebaiknya dipindahkan ke storage terproteksi.
+## Implementasi pada branch ini
+- PDF renderer membaca halaman A4 portrait/landscape dan elemen text, rectangle, serta image dari snapshot Canvas.
+- Placeholder `{{company_name}}` dan `{company_name}` diganti saat PDF dirender.
+- Preview dan download dilayani melalui endpoint admin yang memeriksa company context.
+- Generate PDF dan Send Email menggunakan POST + CSRF.
+- Email dikirim melalui PHPMailer memakai konfigurasi SMTP Settings/.env yang sudah ada; PDF menjadi attachment.
+- Setiap percobaan email dicatat sebagai queued/sent/failed dan dapat dilihat pada halaman Email History.
+- Contract Studio memiliki tombol untuk memasukkan variabel Company Name.
+- Halaman Contract Studio Templates memungkinkan admin menetapkan Default Template.
+- `storage/.htaccess` menolak akses HTTP langsung ke file privat.
+
+## Batasan dan QA
+- Belum dilakukan uji PHP syntax, migration pada database, browser QA, atau pengiriman SMTP nyata.
+- Renderer saat ini mendukung teks, rectangle, dan image data URL dari Canvas; elemen lain yang mungkin ditambahkan di masa depan perlu dukungan renderer tersendiri.
+- Font khusus dari browser mungkin tidak identik dengan hasil PDF Dompdf; gunakan font standar untuk hasil konsisten.
+- Image WebP membutuhkan ekstensi GD untuk dikonversi ke PNG.
+- Pastikan document root hosting diarahkan ke folder `public`; `.htaccess` pada storage merupakan perlindungan tambahan, bukan pengganti konfigurasi document root yang benar.
