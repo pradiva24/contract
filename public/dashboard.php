@@ -38,7 +38,6 @@ page_header('Dashboard');
   <a class="btn" href="<?=e(url('certificate-form.php'))?>">+ Create certificate</a>
   <a class="btn dark" href="<?=e(url('templates.php'))?>">Manage templates</a>
   <a class="btn dark" href="<?=e(url('contract-templates.php'))?>">Contract Studio</a>
-  <a class="btn dark" href="<?=e(url('contract-products.php'))?>">Manage contract products</a>
  </div>
 </div>
 
