@@ -175,7 +175,7 @@ async function convertDocxToStudio(arrayBuffer,fileName){
  if(!nextDoc.pages.length)throw new Error('Dokumen tidak memiliki teks, tabel, atau gambar yang dapat diimpor.');
  doc=nextDoc;pageIndex=0;cfg.templateId=0;
  const url=new URL(location.href);url.searchParams.delete('id');window.history.replaceState({},'',url);
- $('templateName').value=(fileName||'Imported Contract').replace(/\\.docx$/i,'').slice(0,180);
+ $('templateName').value=(fileName||'Imported Contract').replace(/\.docx$/i,'').slice(0,180);
  undoStack=[];historyIndex=-1;selected=null;snapshot();createStage();dirty=true;updateSaveState();
  showToast('Import berhasil: '+objectNo+' elemen pada '+doc.pages.length+' halaman. Periksa layout lalu Save Template.','success');
  if(result.messages&&result.messages.length)console.info('DOCX import notes:',result.messages);
@@ -191,7 +191,7 @@ $('importGoogleBtn').onclick=async()=>{
   const raw=await response.text();let data;try{data=JSON.parse(raw);}catch(_){throw new Error('Server tidak mengirim JSON. HTTP '+response.status+'.');}
   if(!response.ok||!data.ok)throw new Error(data.message||'Google Docs gagal diimpor.');
   const binary=atob(data.docx_base64),bytes=new Uint8Array(binary.length);for(let i=0;i<binary.length;i++)bytes[i]=binary.charCodeAt(i);
-  await convertDocxToStudio(bytes.buffer,'Google Docs - '+link.match(/document\\/d\\/([^/?]+)/)?.[1]+'.docx');
+  await convertDocxToStudio(bytes.buffer,'Google Docs - '+link.match(/document\/d\/([^/?]+)/)?.[1]+'.docx');
  }catch(err){showToast('Import Google Docs gagal: '+err.message,'error');}finally{btn.disabled=false;}
 };
 
