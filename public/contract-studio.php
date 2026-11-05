@@ -90,7 +90,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'save_
         if (db()->inTransaction()) db()->rollBack();
         error_log('Contract Studio save failed: '.$e->getMessage());
         $message = 'Unable to save template. Check server logs.';
-        if ($isSuper && (bool)config('APP_DEBUG', false)) {
+        if ($isSuper && in_array(strtolower((string)config('APP_DEBUG', 'false')), ['1','true','yes','on'], true)) {
             $message .= ' Details: ' . substr($e->getMessage(), 0, 1200);
         }
         studio_json_response(['ok'=>false, 'message'=>$message], 500);
@@ -239,5 +239,5 @@ window.CONTRACT_STUDIO_CONFIG = {
   initialDocument: <?=json_encode($initial, JSON_UNESCAPED_SLASHES|JSON_UNESCAPED_UNICODE|JSON_HEX_TAG|JSON_HEX_APOS|JSON_HEX_AMP|JSON_HEX_QUOT)?>
 };
 </script>
-<script src="<?=e(url('assets/contract-studio.js?v=20261106a'))?>"></script>
+<script src="<?=e(url('assets/contract-studio.js?v=20261106b'))?>"></script>
 </body></html>
